@@ -1,0 +1,15 @@
+[submodule "lib/vendor/Twig"]
+	path = lib/vendor/Twig
+	url = git://github.com/fabpot/Twig.git
+[submodule "lib/vendor/Twig-extensions"]
+	path = lib/vendor/Twig-extensions
+	url = git://github.com/fabpot/Twig-extensions.git
+[submodule "lib/vendor/Symfony"]
+	path = lib/vendor/Symfony
+	url = git://github.com/symfony/symfony.git
+[submodule "lib/vendor/Silex-Extensions"]
+	path = lib/vendor/Silex-Extensions
+	url = git://github.com/fate/Silex-Extensions.git
+[submodule "lib/vendor/KnpMarkdownBundle/Knp/Bundle/MarkdownBundle"]
+	path = lib/vendor/KnpMarkdownBundle/Knp/Bundle/MarkdownBundle
+	url = git://github.com/KnpLabs/KnpMarkdownBundle.git
