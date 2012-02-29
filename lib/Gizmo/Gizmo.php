@@ -3,6 +3,8 @@
 namespace Gizmo;
 
 class Gizmo implements \ArrayAccess {
+    const VERSION = '1.0b';
+    
     static private $instance = null;
     private $silex = null;
     
@@ -19,6 +21,7 @@ class Gizmo implements \ArrayAccess {
     
     public function setup() {
         $gizmo = $this;
+        
         $this->silex->get('/{path}', function ($path) use ($gizmo) {
             return $gizmo->dispatch($path);
         })->assert('path', '.*');
@@ -29,7 +32,9 @@ class Gizmo implements \ArrayAccess {
     }
     
     public function offsetSet($offset, $value) {
-        $this->silex[$offset] = $value;
+        if ($offset !== null) {
+            $this->silex[$offset] = $value;
+        }
     }
     
     public function offsetExists($offset) {

@@ -6,7 +6,7 @@ $app = new Silex\Application();
 $app['debug'] = true;
 
 $app['gizmo.content_path'] = __DIR__.'/src/content';
-$app['gizmo.default_layout'] = 'default.html';
+$app['gizmo.default_layout'] = 'default.html.twig';
 
 $app['autoloader']->registerNamespace('Symfony', __DIR__.'/lib/vendor/Symfony/src');
 $app['autoloader']->registerNamespace('Gizmo', __DIR__.'/lib');

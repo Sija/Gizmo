@@ -104,8 +104,14 @@ class Page implements \ArrayAccess {
         $this->app = Gizmo::getInstance();
     }
     
+    public function __toString() {
+        return sprintf('#<%s: %s>', get_class($this), $this->path);
+    }
+    
     public function offsetSet($offset, $value) {
-        $this->data[$offset] = $value;
+        if ($offset !== null) {
+            $this->data[$offset] = $value;
+        }
     }
     
     public function offsetExists($offset) {
@@ -122,15 +128,44 @@ class Page implements \ArrayAccess {
     
     public function isCurrent() {
         $requestUri = $this->app['request']->getRequestUri();
-        if ('index' === $this->path) {
-            return '/' === $requestUri;
+        $baseUrl = $this->app['request']->getBaseUrl();
+        
+        if ('index' == $this->path) {
+            return $requestUri == $baseUrl || $requestUri == $baseUrl . '/index';
         } else {
-          $baseUrl = $this->app['request']->getBaseUrl();
-          if (empty($baseUrl) || 0 === strpos($requestUri, $baseUrl)) {
-            return preg_match('#(/' . $this->slug . '|' . $this->slug . '/)#', $requestUri);
+            return $requestUri == $baseUrl . '/' . $this->path;
+        }
+    }
+    
+    public function isInPath() {
+        $requestUri = $this->app['request']->getRequestUri();
+        $baseUrl = $this->app['request']->getBaseUrl();
+        
+        if ('index' === $this->path) {
+            return $requestUri == $baseUrl || $requestUri == $baseUrl . '/index';
+        } else {    
+            return preg_match("#(/{$this->slug}|{$this->slug}/)#", $requestUri);
+        }
+    }
+    
+    public function getIndex() {
+        $i = 0;
+        $siblings = $this->getSiblings(true);
+        foreach ($siblings as $sibling) {
+          ++$i;
+          if ($sibling == $this->full_path) {
+              break;
           }
         }
-        return false;
+        return $i;
+    }
+
+    public function isFirst() {
+        return $this->getIndex() === 1;
+    }
+    
+    public function isLast() {
+        return $this->getIndex() === count($this->getSiblings(true));
     }
     
     public function getRoot() {
@@ -177,6 +212,42 @@ class Page implements \ArrayAccess {
             $siblings[$child->getRelativePathname()] = (string) $child;
         }
         return $siblings;
+    }
+    
+    public function getClosestSiblings() {
+        $siblings = $this->getSiblings(true);
+        $neighbors = array();
+        # flip keys/values
+        $siblings = array_flip($siblings);
+        # store keys as array
+        $keys = array_keys($siblings);
+        $keyIndexes = array_flip($keys);
+
+        if (!empty($siblings) && isset($siblings[$this->full_path])) {
+            # previous sibling
+            if (isset($keys[$keyIndexes[$this->full_path] - 1])) {
+                $neighbors[] = $keys[$keyIndexes[$this->full_path] - 1];
+            } else {
+                $neighbors[] = $keys[count($keys) - 1];
+            }
+            # next sibling
+            if (isset($keys[$keyIndexes[$this->full_path] + 1])) {
+                $neighbors[] = $keys[$keyIndexes[$this->full_path] + 1];
+            } else {
+                $neighbors[] = $keys[0];
+            }
+        }
+        return !empty($neighbors) ? $neighbors : array(false, false);
+    }
+    
+    public function getPreviousSibling() {
+        $neighboring_siblings = $this->getClosestSiblings();
+        return $neighboring_siblings[0];
+    }
+    
+    public function getNextSibling() {
+        $neighboring_siblings = $this->getClosestSiblings();
+        return $neighboring_siblings[1];
     }
     
     public function getParent() {
