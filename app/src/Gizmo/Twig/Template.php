@@ -7,7 +7,7 @@ abstract class Twig_Template extends \Twig_Template {
         
         if (is_string($object)) {
             #$object = AssetFactory::get($object);
-            $page = Page::fromFilePath($object);
+            $page = Page::fromFullPath($object);
             if ($page) {
                 $object = $page;
             }

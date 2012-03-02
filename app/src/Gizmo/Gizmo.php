@@ -23,6 +23,7 @@ class Gizmo implements \ArrayAccess {
         $gizmo = $this;
         
         $this->silex->get('/{path}', function ($path) use ($gizmo) {
+            $path = trim($path, '/') ?: 'index'; # Page::getNormalizedPath() ?
             return $gizmo->dispatch($path);
 
         })->assert('path', '.*')->bind('page');

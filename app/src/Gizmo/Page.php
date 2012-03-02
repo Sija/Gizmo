@@ -7,8 +7,12 @@ use Symfony\Component\Yaml\Yaml;
 
 class Page implements \ArrayAccess {
     
-    static protected function getNormalizedPath($path, $content_path) {
-        $path = trim($path, '/') ?: 'index';
+    static protected function getNormalizedPath($path) {
+        return trim($path, '/') ?: 'index';
+    }
+    
+    static protected function findFullPath($path, $content_path) {
+        $path = self::getNormalizedPath($path);
 
         # Split the url and recursively unclean the parts into folder names
         $path_parts = explode('/', $path);
@@ -26,13 +30,10 @@ class Page implements \ArrayAccess {
                 $content_path .= '/' . $dir->getRelativePathname();
             }
         }
-        return array(
-            'relative' => $path,
-            'absolute' => $content_path,
-        );
+        return $content_path;
     }
     
-    static protected function getModelFile($full_path) {
+    static protected function findModelFile($full_path) {
         $it = Finder::create()
           ->files()
           ->depth(0)
@@ -52,30 +53,31 @@ class Page implements \ArrayAccess {
     static public function fromPath($path) {
         $app = Gizmo::getInstance();
         
-        $path = self::getNormalizedPath($path, $app['gizmo.content_path']);
-        if (false === $path) return false;
-        
-        $meta_file = self::getModelFile($path['absolute']);
-        if (false === $meta_file) return false;
-
-        return new self($meta_file, $path);
+        $full_path = self::findFullPath($path, $app['gizmo.content_path']);
+        if ($full_path) {
+            $meta_file = self::findModelFile($full_path);
+            if ($meta_file) {
+                return new self($meta_file, $full_path, $path);
+            }
+        }
+        return false;
     }
     
-    static public function fromFilePath($path) {
+    static public function fromFullPath($full_path) {
         $app = Gizmo::getInstance();
-        if (0 !== strpos($path, $app['gizmo.content_path'])) {
+        if (0 !== strpos($full_path, $app['gizmo.content_path'])) {
             return false;
         }
-        $path = preg_replace("#^{$app['gizmo.content_path']}/#", '', $path);
+        $path = preg_replace("#^{$app['gizmo.content_path']}/#", '', $full_path);
         $path = preg_replace(array('/^\d+?\./', '/(\/)\d+?\./'), '\\1', $path);
         
-        return self::fromPath($path, $app);
+        return self::fromPath($path);
     }
     
-    public function __construct($meta_file, $path) {
+    public function __construct($meta_file, $full_path, $path) {
         $this->app = Gizmo::getInstance();
-        $this->full_path = $path['absolute'];
-        $this->path = $path['relative'];
+        $this->full_path = $full_path;
+        $this->path = self::getNormalizedPath($path);
         $this->url = $this->app['request']->getBaseURL() . '/' . $this->path;
         $this->slug = preg_replace('#(.*?)/([^/]+)$#', '\\2', $this->path);
         $this->title = ucfirst(preg_replace('/[-_]/', ' ', $this->slug));
