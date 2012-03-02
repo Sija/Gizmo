@@ -15,7 +15,7 @@ $app->register(new Silex\Provider\TwigServiceProvider(), array(
     'twig.options' => array(
         'base_template_class' => 'Gizmo\\Twig_Template',
         'strict_variables' => false,
-        'cache' => __DIR__.'/app/cache',
+        'cache' => __DIR__.'/app/cache/templates',
     ),
 ));
 
