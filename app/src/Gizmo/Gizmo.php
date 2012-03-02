@@ -24,7 +24,8 @@ class Gizmo implements \ArrayAccess {
         
         $this->silex->get('/{path}', function ($path) use ($gizmo) {
             return $gizmo->dispatch($path);
-        })->assert('path', '.*');
+
+        })->assert('path', '.*')->bind('page');
     }
     
     public function getSilex() {
@@ -50,7 +51,7 @@ class Gizmo implements \ArrayAccess {
     }
     
     public function dispatch404($path) {
-        $this->silex->abort(404, "Sorry, the page {$path} could not be found.");
+        $this->silex->abort(404, sprintf('Sorry, the page "%s" could not be found.', $path));
     }
     
     public function dispatch($path) {
@@ -58,6 +59,6 @@ class Gizmo implements \ArrayAccess {
         if (!$page) {
             $this->dispatch404($path);
         }
-        return $page->doRender();
+        return $this->silex['twig']->render($page->view, array('page' => $page));
     }
 }

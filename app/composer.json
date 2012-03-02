@@ -1,0 +1,53 @@
+{
+    "name": "gizmo/gizmo",
+    "version": "1.0-dev",
+    "description": "Flexible, file based micro-CMS",
+    "keywords": ["cms", "files"],
+    "homepage": "http://github.com/Sija/Gizmo",
+    "license": "MIT",
+    "source": {
+        "url": "git://github.com/Sija/Gizmo.git",
+        "type": "git",
+        "reference": "master"
+    },
+    "authors": [
+        {
+            "name": "Sijawusz Pur Rahnama",
+            "email": "sija@sija.pl",
+            "homepage": "http://sija.pl/"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "package",
+            "package": {
+                "name": "silex/extensions",
+                "version": "dev-master",
+                "source": {
+                    "url": "git://github.com/fate/Silex-Extensions.git",
+                    "type": "git",
+                    "reference": "master"
+                },
+                "autoload": {
+                    "psr-0": {
+                        "SilexExtension": "src/"
+                    }
+                }
+            }
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "twig/twig": ">=1.6.1",
+        "twig/extensions": "dev-master",
+        "symfony/finder": "dev-master",
+        "symfony/yaml": "dev-master",
+        "silex/extensions": "dev-master",
+        "knplabs/knp-markdown-bundle": "dev-master"
+    },
+    "autoload": {
+        "psr-0": {
+            "Gizmo": "src/"
+        }
+    }
+}

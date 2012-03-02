@@ -6,6 +6,61 @@ use Symfony\Component\Finder\Finder;
 use Symfony\Component\Yaml\Yaml;
 
 class Page implements \ArrayAccess {
+    
+    static protected function getNormalizedPath($path, $content_path) {
+        $path = trim($path, '/') ?: 'index';
+
+        # Split the url and recursively unclean the parts into folder names
+        $path_parts = explode('/', $path);
+        foreach ($path_parts as $part) {
+            if ('_' === $part{0}) return false;
+
+            $it = Finder::create()
+              ->directories()
+              ->depth(0)
+              ->name("/^(\d+?\.)?{$part}$/")
+              ->in($content_path);
+            if (!iterator_count($it)) return false;
+
+            foreach ($it as $dir) {
+                $content_path .= '/' . $dir->getRelativePathname();
+            }
+        }
+        return array(
+            'relative' => $path,
+            'absolute' => $content_path,
+        );
+    }
+    
+    static protected function getModelFile($full_path) {
+        $it = Finder::create()
+          ->files()
+          ->depth(0)
+          ->name('*.yml')
+          ->notName('_*')
+          ->in($full_path);
+
+        if (!iterator_count($it)) {
+            return false;
+        }
+        $meta_files = iterator_to_array($it, false);
+        $meta_file = $meta_files[0];
+        
+        return (string) $meta_file;
+    }
+    
+    static public function fromPath($path) {
+        $app = Gizmo::getInstance();
+        
+        $path = self::getNormalizedPath($path, $app['gizmo.content_path']);
+        if (false === $path) return false;
+        
+        $meta_file = self::getModelFile($path['absolute']);
+        if (false === $meta_file) return false;
+
+        return new self($meta_file, $path);
+    }
+    
     static public function fromFilePath($path) {
         $app = Gizmo::getInstance();
         if (0 !== strpos($path, $app['gizmo.content_path'])) {
@@ -17,91 +72,54 @@ class Page implements \ArrayAccess {
         return self::fromPath($path, $app);
     }
     
-    static public function fromPath($path) {
-        $app = Gizmo::getInstance();
-        $full_path = $app['gizmo.content_path'];
+    public function __construct($meta_file, $path) {
+        $this->app = Gizmo::getInstance();
+        $this->full_path = $path['absolute'];
+        $this->path = $path['relative'];
+        $this->url = $this->app['request']->getBaseURL() . '/' . $this->path;
+        $this->slug = preg_replace('#(.*?)/([^/]+)$#', '\\2', $this->path);
+        $this->title = ucfirst(preg_replace('/[-_]/', ' ', $this->slug));
 
-        $path = trim($path, '/');
-        $path = $path ?: 'index';
-
-        # Split the url and recursively unclean the parts into folder names
-        $path_parts = explode('/', $path);
-        foreach ($path_parts as $part) {
-            if ('_' === $part{0}) return false;
-
-            $it = Finder::create()
-              ->directories()
-              ->depth(0)
-              ->name("/^(\d+?\.)?{$part}$/")
-              ->in($full_path);
-            if (!iterator_count($it)) return false;
-
-            foreach ($it as $dir) {
-                $full_path .= '/' . $dir->getRelativePathname();
-            }
-        }
+        $this->model_name = preg_replace('/\.yml$/', '', basename($meta_file));
+        $this->model_name = preg_replace('/([^.]+\.)?([^.]+)$/', '\\2', $this->model_name);
         
+        $this->data = $this->getModelData($meta_file);
         $it = Finder::create()
           ->files()
           ->depth(0)
-          ->name('*.yml')
-          ->notName('_*')
-          ->in($full_path);
+          ->name($this->model_name . '*.twig')
+          ->in($this->app['twig.path']);
 
         if (!iterator_count($it)) {
-            return false;
+            $this->view = $app['gizmo.default_layout'];
+        } else {    
+            $views = iterator_to_array($it, false);
+            $this->view = $views[0]->getRelativePathname();
         }
-
-        $meta_files = iterator_to_array($it, false);
-        $meta_file = $meta_files[0];
-        $meta_data = Yaml::parse((string) $meta_file);
-
+    }
+    
+    public function getModelData($meta_file) {
         $it = Finder::create()
           ->files()
           ->depth(0)
           ->name('_shared.yml');
         
+        $path_parts = explode('/', $this->path);
         for ($i = count($path_parts); $i >= 0; --$i) {
-            $it->in(realpath($full_path . str_repeat('/..', $i)));
+            $it->in(realpath($this->full_path . str_repeat('/..', $i)));
         }
         
+        $meta_data = Yaml::parse($meta_file);
         $data = array();
         foreach ($it as $file) {
-            $data = array_merge($data, Yaml::parse((string) $file));
+            if ($loaded = Yaml::parse((string) $file)) {
+                $data = array_merge($data, $loaded);
+            }
         }
         if (!empty($meta_data)) {
             $data = array_merge($data, $meta_data);
         }
-        $view_name = preg_replace('/\.yml$/', '', $meta_file->getRelativePathname());
-        $view_file = preg_replace('/([^.]+\.)?([^.]+)$/', '\\2', $view_name);
-
-        $it = Finder::create()
-          ->files()
-          ->depth(0)
-          ->name($view_file . '*.twig')
-          ->in($app['twig.path']);
-
-        if (!iterator_count($it)) {
-            $view = $app['gizmo.default_layout'];
-        } else {    
-            $views = iterator_to_array($it, false);
-            $view = $views[0]->getRelativePathname();
-        }
-        
-        $self = new self;
-        $self->url = $app['request']->getBaseURL() . '/' . $path;
-        $self->full_path = $full_path;
-        $self->relative_path = preg_replace("#^{$app['gizmo.content_path']}/#", '', $full_path);
-        $self->path = $path;
-        $self->slug = preg_replace('#(.*?)/([^/]+)$#', '\\2', $path);
-        $self->view = $view;
-        $self->data = $data;
-        
-        return $self;
-    }
-    
-    public function __construct() {
-        $this->app = Gizmo::getInstance();
+        return $data;
     }
     
     public function __toString() {
@@ -255,7 +273,7 @@ class Page implements \ArrayAccess {
     }
     
     public function getParents() {
-        $path_parts = explode('/', $this->relative_path);
+        $path_parts = explode('/', $this->path);
         $parents = array();
         while (count($path_parts) > 1) {
             array_pop($path_parts);
@@ -263,9 +281,5 @@ class Page implements \ArrayAccess {
         }
         $parents = array_reverse($parents);
         return $parents;
-    }
-    
-    public function doRender() {
-        return $this->app['twig']->render($this->view, array('page' => $this));
     }
 }
