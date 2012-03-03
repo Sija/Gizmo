@@ -271,17 +271,21 @@ class Page implements \ArrayAccess {
     }
     
     public function getParent() {
-        return realpath($this->full_path . '/..');
+        return $this->getParents(true);
     }
     
-    public function getParents() {
+    public function getParents($first = false) {
         $path_parts = explode('/', $this->path);
         $parents = array();
-        while (count($path_parts) > 1) {
+        while (count($path_parts) >= 1) {
             array_pop($path_parts);
-            $parents[] = $this->app['gizmo.content_path'] . '/' . implode('/', $path_parts);
+            if ($parent = self::fromPath(implode('/', $path_parts))) {
+                if ($first)
+                    return $parent->full_path;
+                    
+                $parents[] = $parent->full_path;
+            }
         }
-        $parents[] = $this->app['gizmo.content_path'];
         $parents = array_reverse($parents);
         return $parents;
     }
