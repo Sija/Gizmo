@@ -68,7 +68,7 @@ class Page implements \ArrayAccess {
         if (0 !== strpos($full_path, $app['gizmo.content_path'])) {
             return false;
         }
-        $path = preg_replace("#^{$app['gizmo.content_path']}/#", '', $full_path);
+        $path = preg_replace("#^{$app['gizmo.content_path']}/?#", '', $full_path);
         $path = preg_replace(array('/^\d+?\./', '/(\/)\d+?\./'), '\\1', $path);
         
         return self::fromPath($path);
@@ -78,7 +78,7 @@ class Page implements \ArrayAccess {
         $this->app = Gizmo::getInstance();
         $this->full_path = $full_path;
         $this->path = $path;
-        $this->url = $this->app['request']->getBaseURL() . '/' . $this->path;
+        $this->url = $this->app['request']->getBaseURL() . '/' . preg_replace('#/?index#', '', $this->path);
         $this->slug = preg_replace('#(.*?)/([^/]+)$#', '\\2', $this->path);
         $this->title = ucfirst(preg_replace('/[-_]/', ' ', $this->slug));
 
@@ -281,6 +281,7 @@ class Page implements \ArrayAccess {
             array_pop($path_parts);
             $parents[] = $this->app['gizmo.content_path'] . '/' . implode('/', $path_parts);
         }
+        $parents[] = $this->app['gizmo.content_path'];
         $parents = array_reverse($parents);
         return $parents;
     }
