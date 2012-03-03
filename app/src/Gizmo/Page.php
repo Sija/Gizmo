@@ -7,13 +7,11 @@ use Symfony\Component\Yaml\Yaml;
 
 class Page implements \ArrayAccess {
     
-    static protected function getNormalizedPath($path) {
+    static public function getNormalizedPath($path) {
         return trim($path, '/') ?: 'index';
     }
     
     static protected function findFullPath($path, $content_path) {
-        $path = self::getNormalizedPath($path);
-
         # Split the url and recursively unclean the parts into folder names
         $path_parts = explode('/', $path);
         foreach ($path_parts as $part) {
@@ -53,7 +51,9 @@ class Page implements \ArrayAccess {
     static public function fromPath($path) {
         $app = Gizmo::getInstance();
         
+        $path = self::getNormalizedPath($path);
         $full_path = self::findFullPath($path, $app['gizmo.content_path']);
+        
         if ($full_path) {
             $meta_file = self::findModelFile($full_path);
             if ($meta_file) {
@@ -77,7 +77,7 @@ class Page implements \ArrayAccess {
     public function __construct($meta_file, $full_path, $path) {
         $this->app = Gizmo::getInstance();
         $this->full_path = $full_path;
-        $this->path = self::getNormalizedPath($path);
+        $this->path = $path;
         $this->url = $this->app['request']->getBaseURL() . '/' . $this->path;
         $this->slug = preg_replace('#(.*?)/([^/]+)$#', '\\2', $this->path);
         $this->title = ucfirst(preg_replace('/[-_]/', ' ', $this->slug));

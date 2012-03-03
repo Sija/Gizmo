@@ -19,20 +19,6 @@ class Gizmo implements \ArrayAccess {
         $this->setup();
     }
     
-    public function setup() {
-        $gizmo = $this;
-        
-        $this->silex->get('/{path}', function ($path) use ($gizmo) {
-            $path = trim($path, '/') ?: 'index'; # Page::getNormalizedPath() ?
-            return $gizmo->dispatch($path);
-
-        })->assert('path', '.*')->bind('page');
-    }
-    
-    public function getSilex() {
-        return $this->silex;
-    }
-    
     public function offsetSet($offset, $value) {
         if ($offset !== null) {
             $this->silex[$offset] = $value;
@@ -51,14 +37,27 @@ class Gizmo implements \ArrayAccess {
         return isset($this->silex[$offset]) ? $this->silex[$offset] : null;
     }
     
+    public function setup() {
+        $gizmo = $this;
+        
+        $this->silex->get('/{path}', function ($path) use ($gizmo) {
+            return $gizmo->dispatch($path);
+
+        })->assert('path', '.*')->bind('page');
+    }
+    
     public function dispatch404($path) {
+        if ($page404 = Page::fromPath('404')) {
+            return $this->silex['twig']->render($page404->view, array('page' => $page404));
+        }
         $this->silex->abort(404, sprintf('Sorry, the page "%s" could not be found.', $path));
     }
     
     public function dispatch($path) {
+        $path = Page::getNormalizedPath($path);
         $page = Page::fromPath($path);
         if (!$page) {
-            $this->dispatch404($path);
+            return $this->dispatch404($path);
         }
         return $this->silex['twig']->render($page->view, array('page' => $page));
     }

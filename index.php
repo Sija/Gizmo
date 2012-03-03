@@ -34,7 +34,7 @@ $app['twig.configure'] = $app->protect(function($twig) {
 */
 $app['twig']->addExtension(new Twig_Extensions_Extension_Text());
 $app['twig']->addExtension(new Twig_Extensions_Extension_Debug());
-$app['twig']->addExtension(new Gizmo\Twig_Extension());
+$app['twig']->addExtension(new Gizmo\Twig_Extension_Gizmo());
 
 $app->before(function () use ($app) {
     #$app['twig']->addGlobal('layout', $app['twig']->loadTemplate('layout.html.twig'));

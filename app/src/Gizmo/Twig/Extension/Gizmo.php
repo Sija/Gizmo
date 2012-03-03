@@ -2,7 +2,7 @@
 
 namespace Gizmo;
 
-class Twig_Extension extends \Twig_Extension {
+class Twig_Extension_Gizmo extends \Twig_Extension {
     public function getName() {
         return 'Gizmo';
     }
@@ -12,11 +12,7 @@ class Twig_Extension extends \Twig_Extension {
             'get' => new \Twig_Filter_Method($this, 'get'),
         );
     }
-    /*
-    public function getTokenParsers() {
-        return array(new Twig_TokenParser_Get());
-    }
-    */
+
     public function get($path) {
         # AssetFactory::get($path)
         return Page::fromPath($path);
