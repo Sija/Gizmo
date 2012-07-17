@@ -1,8 +1,7 @@
 {
     "name": "gizmo/gizmo",
-    "version": "1.0-dev",
     "description": "Flexible, file based micro-CMS",
-    "keywords": ["cms", "files"],
+    "keywords": ["microcms", "cms", "yaml"],
     "homepage": "http://github.com/Sija/Gizmo",
     "license": "MIT",
     "source": {
@@ -17,37 +16,27 @@
             "homepage": "http://sija.pl/"
         }
     ],
-    "repositories": [
-        {
-            "type": "package",
-            "package": {
-                "name": "silex/extensions",
-                "version": "dev-master",
-                "source": {
-                    "url": "git://github.com/fate/Silex-Extensions.git",
-                    "type": "git",
-                    "reference": "master"
-                },
-                "autoload": {
-                    "psr-0": {
-                        "SilexExtension": "src/"
-                    }
-                }
-            }
-        }
-    ],
+    "config": {
+        "process-timeout": 600
+    },
+    "minimum-stability": "dev",
     "require": {
-        "php": ">=5.3.0",
-        "twig/twig": ">=1.6.1",
+        "php": ">=5.3.2",
+        "twig/twig": "1.*",
         "twig/extensions": "dev-master",
-        "symfony/finder": "dev-master",
-        "symfony/yaml": "dev-master",
-        "silex/extensions": "dev-master",
-        "knplabs/knp-markdown-bundle": "dev-master"
+        "symfony/finder": "2.1.*",
+        "symfony/yaml": "2.1.*",
+        "silex/silex": "1.0.*",
+        "fate/silex-extensions": "dev-master"
     },
     "autoload": {
         "psr-0": {
-            "Gizmo": "src/"
+            "": "src/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
         }
     }
 }
