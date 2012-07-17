@@ -12,7 +12,7 @@ class Page extends Model
     public function setData(array $data)
     {
         parent::setData($data);
-        parent::addData($this->meta);
+        parent::addData($this->modelMeta);
     }
     
     protected function setDefaultAttributes()
@@ -44,12 +44,12 @@ class Page extends Model
                 $modelName = preg_replace('/([^.]+\.)?([^.]+)$/', '\\2', $modelName);
                 return $modelName;
             },
-            'meta' => function ($page, $app) {
+            'modelMeta' => function ($page, $app) {
                 $sharedFiles = array();
                 for ($i = $page->level; $i >= 0; --$i) {
-                    $sharedFiles += $app['gizmo.cache']->getFiles(
+                    $sharedFiles = array_merge($sharedFiles, $app['gizmo.cache']->getFiles(
                         realpath($page->fullPath . str_repeat('/..', $i)),
-                        '/^_shared\.yml$/');
+                        '/^_shared\.yml$/'));
                 }
                 $data = array();
                 foreach ($sharedFiles as $file) {
@@ -57,9 +57,9 @@ class Page extends Model
                         $data = array_merge($data, $loadedData);
                     }
                 }
-                $meta = Yaml::parse($page->metaFile);
-                if (!empty($meta)) {
-                    $data = array_merge($data, $meta);
+                $modelMeta = Yaml::parse($page->metaFile);
+                if (!empty($modelMeta)) {
+                    $data = array_merge($data, $modelMeta);
                 }
                 return $data;
             },
