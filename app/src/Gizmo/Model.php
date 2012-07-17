@@ -164,27 +164,24 @@ abstract class Model implements \ArrayAccess
                 return $app['gizmo.cache']->getFolders($app['gizmo.content_path'], '/^\d+?\./');
             },
             'parent' => function ($model, $app) {
-                $path_parts = explode('/', $model->path);
+                $pathSegments = explode('/', $model->path);
                 $parents = array();
-                while (count($path_parts) >= 1) {
-                    array_pop($path_parts);
-                    if ($parent = $app['gizmo.page'](implode('/', $path_parts))) {
+                while (count($pathSegments) >= 1) {
+                    array_pop($pathSegments);
+                    if ($parent = $app['gizmo.page'](join('/', $pathSegments))) {
                         return $parent->fullPath;
                     }
                 }
-                return $app['gizmo.content_path'];
+                return null;
             },
             'parents' => function ($model, $app) {
-                $path_parts = explode('/', $model->path);
+                $pathSegments = explode('/', $model->path);
                 $parents = array();
-                while (count($path_parts) >= 1) {
-                    array_pop($path_parts);
-                    if ($parent = $app['gizmo.page'](implode('/', $path_parts))) {
+                while (count($pathSegments) >= 1) {
+                    array_pop($pathSegments);
+                    if ($parent = $app['gizmo.page'](join('/', $pathSegments))) {
                         $parents[] = $parent->fullPath;
                     }
-                }
-                if (empty($parents)) {
-                    return (array) $app['gizmo.content_path'];
                 }
                 $parents = array_reverse($parents);
                 return $parents;
@@ -193,13 +190,13 @@ abstract class Model implements \ArrayAccess
                 return $app['gizmo.cache']->getFolders($model->fullPath, '/^\d+?\./');
             },
             'siblings' => function ($model, $app) {
-                if ($model->fullPath == $app['gizmo.content_path']) {
+                if ($model->isRoot) {
                     return array();
                 }
                 return $app['gizmo.cache']->getFolders($model->parent, '/^\d+?\.(?!' . preg_quote($model->slug) . ')/');
             },
             'siblingsWitSelf' => function ($model, $app) {
-                if ($model->fullPath == $app['gizmo.content_path']) {
+                if ($model->isRoot) {
                     return (array) $model->fullPath;
                 }
                 return $app['gizmo.cache']->getFolders($model->parent, '/^\d+?\./');
@@ -231,12 +228,23 @@ abstract class Model implements \ArrayAccess
                 return !empty($neighbors) ? $neighbors : array(null, null);
             },
             'previousSibling' => function ($model) {
-                $neighboring_siblings = $model->closestSiblings;
-                return $neighboring_siblings[0];
+                return $model->closestSiblings[0];
+            },
+            'previousSiblings' => function ($model) {
+                if (!$model->index) {
+                    return array();
+                }
+                return array_slice($model->siblingsWitSelf, 0, $model->index - 1);
             },
             'nextSibling' => function ($model) {
-                $neighboring_siblings = $model->closestSiblings;
-                return $neighboring_siblings[1];
+                return $model->closestSiblings[1];
+            },
+            'nextSiblings' => function ($model) {
+                if (!$model->index) {
+                    return array();
+                }
+                $siblingsWitSelf = $model->siblingsWitSelf;
+                return array_slice($siblingsWitSelf, $model->index, count($siblingsWitSelf));
             },
             'index' => function ($model) {
                 $i = 0;
@@ -244,10 +252,18 @@ abstract class Model implements \ArrayAccess
                 foreach ($siblings as $sibling) {
                   ++$i;
                   if ($sibling == $model->fullPath) {
-                      break;
+                      return $i;
                   }
                 }
-                return $i;
+                return 0;
+            },
+            'level' => function ($model) {
+                return !$model->isRoot
+                    ? 1 + substr_count($model->path, '/')
+                    : 0;
+            },
+            'isRoot' => function ($model, $app) {
+                return ($model->fullPath == $app['gizmo.content_path']);
             },
             'isFirst' => function ($model) {
                 return $model->index === 1;

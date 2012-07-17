@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  {% include 'sitemap/sitemap-url.xml.twig' with { page: page.parents[0], priority: 0.9 } %}
+  {% for child in page.root %}
+    {% include 'sitemap/sitemap-url.xml.twig' with { page: child } %}
+    {% if child.children %}
+      {% include 'sitemap/sitemap-children.xml.twig' with { page: child } %}
+    {% endif %}
+  {% endfor %}
+</urlset>

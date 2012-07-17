@@ -27,7 +27,8 @@
         "symfony/finder": "2.1.*",
         "symfony/yaml": "2.1.*",
         "silex/silex": "1.0.*",
-        "fate/silex-extensions": "dev-master"
+        "fate/silex-extensions": "dev-master",
+        "kriswallsmith/assetic": "dev-master"
     },
     "autoload": {
         "psr-0": {

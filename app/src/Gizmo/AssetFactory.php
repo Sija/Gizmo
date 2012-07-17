@@ -6,8 +6,9 @@ use Symfony\Component\Finder\Finder;
 
 class AssetFactory extends ModelFactory
 {
-    protected $assetMap = array();
-    protected $extensionMap = array();
+    protected
+        $assetMap = array(),
+        $extensionMap = array();
     
     public function __construct(\Silex\Application $app)
     {
@@ -17,40 +18,30 @@ class AssetFactory extends ModelFactory
         foreach (get_declared_classes() as $class) {
             if (get_parent_class($class) == 'Gizmo\\Asset') {
                 $extensions = $class::getSupportedExtensions();
-                foreach ($extensions as $extension) {
-                    $this->extensionMap[$extension][] = $class;
+                foreach ($extensions as $ext) {
+                    $this->extensionMap[$ext][] = $class;
                 }
                 $this->assetMap[$class] = $extensions;
             }
         }
     }
-
-    public function modelFromFullPath($full_path)
+    
+    public function getAssetMap()
     {
-        if (!is_file($full_path)) {
+        return $this->assetMap;
+    }
+    
+    public function modelFromFullPath($fullPath)
+    {
+        if (!is_file($fullPath)) {
             return false;
         }
-        $asset_class = $this->findAssetClass($full_path);
-        if ($asset_class) {
-            $asset = new $asset_class($this->app, array(
-                'fullPath' => $full_path
+        $assetClass = $this->findAssetClass($fullPath);
+        if ($assetClass) {
+            $asset = new $assetClass($this->app, array(
+                'fullPath' => $fullPath
             ));
             return $asset;
-        }
-        return false;
-    }
-
-    protected function findAssetClass($full_path)
-    {
-        $file_extension = strtolower(pathinfo($full_path, PATHINFO_EXTENSION));
-        if (empty($file_extension) || !is_file($full_path)) {
-            return false;
-        }
-        $asset_class = 'Gizmo\\Asset';
-        if (isset($this->extensionMap[$file_extension])) {
-            $asset_classes = $this->extensionMap[$file_extension];
-            $asset_class = $asset_classes[count($asset_classes) - 1];
-            return $asset_class;
         }
         return false;
     }
@@ -71,8 +62,17 @@ class AssetFactory extends ModelFactory
         }
     }
     
-    public function getAssetMap()
+    protected function findAssetClass($path)
     {
-        return $this->assetMap;
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        if (!$ext) return false;
+
+        $assetClass = 'Gizmo\\Asset';
+        if (isset($this->extensionMap[$ext])) {
+            $assetClasses = $this->extensionMap[$ext];
+            $assetClass = $assetClasses[count($assetClasses) - 1];
+            return $assetClass;
+        }
+        return false;
     }
 }

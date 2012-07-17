@@ -19,24 +19,22 @@ class Page extends Model
     {
         parent::setDefaultAttributes();
         
-        $this->addAttributes(array(
-            'files' => function ($page, $app) {
-                return $app['gizmo.cache']->getFiles($page->fullPath,
-                    '/(?<!thumb)\.(?!yml)([\w\d]+?)$/i');
-            }
-        ));
-        $asset_types = $this->_app['gizmo.asset_factory']->getAssetMap();
-        
-        foreach ($asset_types as $class => $extensions) {
+        $assetTypes = $this->_app['gizmo.asset_factory']->getAssetMap();
+        foreach ($assetTypes as $class => $extensions) {
             $key = sprintf('%ss', strtolower(preg_replace('/^((.+?)\\\)?(.+?)$/', '\\3', $class)));
             $this->addAttributes(array(
                 $key => function ($page, $app) use ($extensions) {
                     return $app['gizmo.cache']->getFiles($page->fullPath,
-                        '/(?<!thumb)\.(' . implode('|', $extensions) . ')$/i');
+                        '/^(?!thumb).(?<!_)(.+?)\.(' . join('|', $extensions) . ')$/i');
                 }
             ));
         }
-
+        $this->addAttributes(array(
+            'files' => function ($page, $app) {
+                return $app['gizmo.cache']->getFiles($page->fullPath,
+                    '/^(?!thumb).(?<!_)(.+?)\.(?!yml)([\w\d]+?)$/i');
+            }
+        ));
         $this->addAttributes(array(
             'format' => function ($page, $app) {
                 return $app['request']->getRequestFormat();
@@ -47,21 +45,21 @@ class Page extends Model
                 return $modelName;
             },
             'meta' => function ($page, $app) {
-                $files = array();
-                $path_parts = explode('/', $page->path);
-                for ($i = count($path_parts); $i >= 0; --$i) {
-                    $path = realpath($page->fullPath . str_repeat('/..', $i));
-                    $files += $app['gizmo.cache']->getFiles($path, '/^_shared\.yml$/');
+                $sharedFiles = array();
+                for ($i = $page->level; $i >= 0; --$i) {
+                    $sharedFiles += $app['gizmo.cache']->getFiles(
+                        realpath($page->fullPath . str_repeat('/..', $i)),
+                        '/^_shared\.yml$/');
                 }
-                $meta_data = Yaml::parse($page->metaFile);
                 $data = array();
-                foreach ($files as $file) {
-                    if ($loaded = Yaml::parse($file)) {
-                        $data = array_merge($data, $loaded);
+                foreach ($sharedFiles as $file) {
+                    if ($loadedData = Yaml::parse($file)) {
+                        $data = array_merge($data, $loadedData);
                     }
                 }
-                if (!empty($meta_data)) {
-                    $data = array_merge($data, $meta_data);
+                $meta = Yaml::parse($page->metaFile);
+                if (!empty($meta)) {
+                    $data = array_merge($data, $meta);
                 }
                 return $data;
             },
@@ -92,21 +90,21 @@ class Page extends Model
         ));
         $this->addDynamicAttributes(array(
             'isCurrent' => function ($page, $app) {
-                $requestUri = $app['request']->getRequestUri();
+                $requestUri = rtrim($app['request']->getRequestUri(), '/');
                 $baseUrl = $app['request']->getBaseUrl();
 
                 if ('index' == $page->path) {
                     return $requestUri == $baseUrl;
                 } else {
-                    return $requestUri == $baseUrl . '/' . $page->path;
+                    return $requestUri == $baseUrl . $page->permalink;
                 }
             },
             'inPath' => function ($page, $app) {
-                $requestUri = $app['request']->getRequestUri();
+                $requestUri = rtrim($app['request']->getRequestUri(), '/');
                 $baseUrl = $app['request']->getBaseUrl();
 
                 if ('index' === $page->path) {
-                    return $requestUri == $baseUrl || $requestUri == $baseUrl . '/index';
+                    return $requestUri == $baseUrl;
                 } else {
                     return preg_match("#(/{$page->slug}$|{$page->slug}/)#", $requestUri);
                 }

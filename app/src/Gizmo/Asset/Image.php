@@ -9,13 +9,13 @@ class Image extends Asset
         parent::setData($data);
 
         # set asset.width & asset.height variables
-        $img_data = getimagesize($this->fullPath, $img_info);
-        $this->width = $img_data[0];
-        $this->height = $img_data[1];
+        $imgData = getimagesize($this->fullPath, $imgInfo);
+        $this->width = $imgData[0];
+        $this->height = $imgData[1];
 
         # set iptc variables
-        if (isset($img_info['APP13'])) {
-            $iptc = iptcparse($img_info['APP13']);
+        if (isset($imgInfo['APP13'])) {
+            $iptc = iptcparse($imgInfo['APP13']);
             # asset.title
             if (isset($iptc['2#005'][0])) {
                 $this->title = $iptc['2#005'][0];

@@ -6,7 +6,8 @@ use Symfony\Component\Finder\Finder;
 
 class Cache
 {
-    protected $store = array();
+    protected
+        $store = array();
     
     public function addFolder($dir)
     {

@@ -1,11 +1,17 @@
 {
-    "hash": "b20b78cff650422e35261b2c6a1a0ae0",
+    "hash": "26b022cb5a4dc5035a8946841bcfb196",
     "packages": [
         {
             "package": "fate/silex-extensions",
             "version": "dev-master",
             "source-reference": "4946385ab84fbbe0d25f877c687e322f72838737",
             "commit-date": "1341410252"
+        },
+        {
+            "package": "kriswallsmith/assetic",
+            "version": "dev-master",
+            "source-reference": "d6f89a3170c5280ad554347dc113eb25fdf00ad7",
+            "commit-date": "1339515714"
         },
         {
             "package": "pimple/pimple",
@@ -28,8 +34,8 @@
         {
             "package": "silex/silex",
             "version": "dev-master",
-            "source-reference": "18e248a277adb061602d2bcabe96011db1c76ec0",
-            "commit-date": "1342208524"
+            "source-reference": "b9277c0e378ff1bce2a3e974cb801b6d9b0b5d5f",
+            "commit-date": "1342380872"
         },
         {
             "package": "symfony/event-dispatcher",
@@ -40,8 +46,8 @@
         {
             "package": "symfony/event-dispatcher",
             "version": "dev-master",
-            "source-reference": "b99b49760016467099f010aff7a5098861d49e09",
-            "commit-date": "1342207366"
+            "source-reference": "v2.1.0-BETA3",
+            "commit-date": "1342347231"
         },
         {
             "package": "symfony/finder",
@@ -52,8 +58,8 @@
         {
             "package": "symfony/finder",
             "version": "dev-master",
-            "source-reference": "3338fb3883eaed08a30b206a79491f6e48dfc12b",
-            "commit-date": "1342207366"
+            "source-reference": "v2.1.0-BETA3",
+            "commit-date": "1342347231"
         },
         {
             "package": "symfony/http-foundation",
@@ -64,8 +70,8 @@
         {
             "package": "symfony/http-foundation",
             "version": "dev-master",
-            "source-reference": "498c2da9c3fecefc7e3b0add73621f3feb337ddd",
-            "commit-date": "1342207366"
+            "source-reference": "v2.1.0-BETA3",
+            "commit-date": "1342347231"
         },
         {
             "package": "symfony/http-kernel",
@@ -76,8 +82,20 @@
         {
             "package": "symfony/http-kernel",
             "version": "dev-master",
-            "source-reference": "efedca5d30added6a21fc6ae8356617ad1c80de7",
-            "commit-date": "1342271095"
+            "source-reference": "6df39b97d0815fa493c84ed448eb6cc961652303",
+            "commit-date": "1342376835"
+        },
+        {
+            "package": "symfony/process",
+            "version": "dev-master",
+            "alias-pretty-version": "2.1.x-dev",
+            "alias-version": "2.1.9999999.9999999-dev"
+        },
+        {
+            "package": "symfony/process",
+            "version": "dev-master",
+            "source-reference": "v2.1.0-BETA3",
+            "commit-date": "1342347231"
         },
         {
             "package": "symfony/routing",
@@ -88,8 +106,8 @@
         {
             "package": "symfony/routing",
             "version": "dev-master",
-            "source-reference": "6bca82c3ea0d42d750de4f49b22020dfd047dc0f",
-            "commit-date": "1342207366"
+            "source-reference": "v2.1.0-BETA3",
+            "commit-date": "1342347231"
         },
         {
             "package": "symfony/yaml",
@@ -100,8 +118,8 @@
         {
             "package": "symfony/yaml",
             "version": "dev-master",
-            "source-reference": "84ec179dc8ecc36c84b3ccbd88901f867b8746a2",
-            "commit-date": "1342207366"
+            "source-reference": "v2.1.0-BETA3",
+            "commit-date": "1342347231"
         },
         {
             "package": "twig/extensions",
@@ -118,8 +136,8 @@
         {
             "package": "twig/twig",
             "version": "dev-master",
-            "source-reference": "17e2c36a58c4b17a58a3befa783d16ac19776df5",
-            "commit-date": "1342275003"
+            "source-reference": "d45664045194ef62573c153c424508527105041e",
+            "commit-date": "1342424564"
         }
     ],
     "packages-dev": null,
@@ -129,6 +147,7 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "twig/extensions": 20,
-        "fate/silex-extensions": 20
+        "fate/silex-extensions": 20,
+        "kriswallsmith/assetic": 20
     }
 }

@@ -39,16 +39,6 @@ class Asset extends Model
         parent::setDefaultAttributes();
         
         $this->addAttributes(array(
-            'permalinkRaw' => function ($asset, $app) {
-                # TODO
-                return substr($asset->fullPath, strlen($app['gizmo.content_path']));
-            },
-            'uriRaw' => function ($asset, $app) {
-                return $app['request']->getUriForPath($asset->permalinkRaw);
-            },
-            'urlRaw' => function ($asset, $app) {
-                return $app['request']->getBaseURL() . $asset->permalinkRaw;
-            },
             'modelName' => function ($asset) {
                 $modelName = explode('\\', strtolower(get_class($asset)));
                 return $modelName[count($modelName) - 1];

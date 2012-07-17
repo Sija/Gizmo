@@ -4,28 +4,28 @@ namespace Gizmo;
 
 class PageFactory extends ModelFactory
 {
-    public function modelFromFullPath($full_path)
+    public function modelFromFullPath($fullPath)
     {
-        if (!is_dir($full_path)) {
+        if (!is_dir($fullPath)) {
             return false;
         }
-        $meta_file = $this->findMetaFile($full_path);
-        if ($meta_file) {
+        $metaFile = $this->findMetaFile($fullPath);
+        if ($metaFile) {
             $page = new Page($this->app, array(
-                'fullPath' => $full_path,
-                'metaFile' => $meta_file
+                'fullPath' => $fullPath,
+                'metaFile' => $metaFile
             ));
             return $page;
         }
         return false;
     }
     
-    protected function findMetaFile($full_path)
+    protected function findMetaFile($fullPath)
     {
-        $meta_files = $this->app['gizmo.cache']->getFiles($full_path, '/^.(?<!_)(.+?)\.yml$/');
-        if (empty($meta_files)) {
+        $metaFiles = $this->app['gizmo.cache']->getFiles($fullPath, '/^.(?<!_)(.+?)\.yml$/');
+        if (empty($metaFiles)) {
             return null;
         }
-        return $meta_files[0];
+        return $metaFiles[0];
     }
 }

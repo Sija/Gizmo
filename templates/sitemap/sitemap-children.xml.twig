@@ -1,0 +1,4 @@
+{% for child in page.children %}
+  {% include 'sitemap/sitemap-url.xml.twig' with { page: child } %}
+  {% include 'sitemap/sitemap-children.xml.twig' with { page: child } %}
+{% endfor %}

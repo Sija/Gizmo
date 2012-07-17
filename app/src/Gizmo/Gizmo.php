@@ -20,9 +20,9 @@ class Gizmo implements ServiceProviderInterface, ControllerProviderInterface
     public function register(Application $app)
     {
         $this->app = $app;
-        $self = $this;
         
-        $app['gizmo'] = $app->share(function ($app) use ($self) {
+        $self = $this;
+        $app['gizmo'] = $app->share(function () use ($self) {
             return $self;
         });
         $app['gizmo.cache'] = $app->share(function ($app) {
@@ -61,8 +61,7 @@ class Gizmo implements ServiceProviderInterface, ControllerProviderInterface
         });
         $app['gizmo.model'] = $app->protect(function ($path) use ($app) {
             if (0 !== strpos($path, $app['gizmo.content_path'])) {
-                $path = $app['gizmo.expand_path']($path);
-                if (!$path) {
+                if (!$path = $app['gizmo.expand_path']($path)) {
                     return false;
                 }
             }
@@ -86,18 +85,27 @@ class Gizmo implements ServiceProviderInterface, ControllerProviderInterface
     {
         date_default_timezone_set(isset($app['gizmo.timezone']) ? $app['gizmo.timezone'] : 'UTC');
         
+        $app['gizmo.cache_path'] = $app['gizmo.app_path'] . '/cache';
+        
         $app->register(new \Silex\Provider\TwigServiceProvider(), array(
             'twig.path' => $app['gizmo.templates_path'],
             'twig.options' => array(
                 'base_template_class' => 'Gizmo\\Twig_Template',
                 'strict_variables' => false,
-                'cache' => $app['gizmo.app_path'] . '/cache/templates',
+                'cache' => $app['gizmo.cache_path'] . '/templates',
             ),
         ));
         $app['twig']->addExtension(new \Twig_Extensions_Extension_Text());
         $app['twig']->addExtension(new \Twig_Extensions_Extension_Debug());
         $app['twig']->addExtension(new Twig_Extension_Gizmo($app));
         
+        $app->register(new \SilexExtension\AsseticExtension(), array(
+            'assetic.path_to_web' => $app['gizmo.assets_path'],
+            'assetic.options' => array(
+                'formulae_cache_dir' => $app['gizmo.cache_path'] . '/assetic',
+                'debug' => $app['debug']
+            ),
+        ));
         $app['markdown.features'] = array(
             'entities' => true
         );
@@ -132,12 +140,15 @@ class Gizmo implements ServiceProviderInterface, ControllerProviderInterface
 
     public function render404()
     {
+        $response = new Response(null, 404);
         if ($page404 = $this->app['gizmo.page_factory']->fromPath('404')) {
-            return $this->renderModel($page404);
+            $response->setContent($this->renderModel($page404));
+            return $response;
         }
         $file404 = $this->app['gizmo.public_path'] . '/404.html';
         if (file_exists($file404)) {
-            return file_get_contents($file404);
+            $response->setContent(file_get_contents($file404));
+            return $response;
         }
         $this->app->abort(404, 'Sorry, the requested page could not be found.');
     }
@@ -159,9 +170,10 @@ class Gizmo implements ServiceProviderInterface, ControllerProviderInterface
     
     public function dispatch($path = null)
     {
-        $model = $this->app['gizmo.model']($path);
-        if ($model) {
-            return $this->renderModel($model);
+        if ($model = $this->app['gizmo.model']($path)) {
+            if ($rendered = $this->renderModel($model)) {
+                return $rendered;
+            }
         }
         return $this->render404();
     }
