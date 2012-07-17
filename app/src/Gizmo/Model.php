@@ -5,15 +5,15 @@ namespace Gizmo;
 abstract class Model implements \ArrayAccess
 {
     protected
-        $_app = null,
-        $_attributes = array(),
-        $_dynamicAttributes = array(),
-        $_data = array(),
-        $_requiredKeys = array('fullPath');
+        $app = null,
+        $attributes = array(),
+        $dynamicAttributes = array(),
+        $data = array(),
+        $requiredKeys = array('fullPath');
     
     public function __construct(\Silex\Application $app, array $data = array())
     {
-        $this->_app = $app;
+        $this->app = $app;
         $this->setDefaultAttributes();
         $this->setData($data);
     }
@@ -45,69 +45,69 @@ abstract class Model implements \ArrayAccess
     
     public function offsetGet($key)
     {
-        if (isset($this->_data[$key])) {
-            return $this->_data[$key];
+        if (isset($this->data[$key])) {
+            return $this->data[$key];
         }
-        if (isset($this->_attributes[$key])) {
-            return $this[$key] = $this->_attributes[$key]($this, $this->_app);
+        if (isset($this->attributes[$key])) {
+            return $this[$key] = $this->attributes[$key]($this, $this->app);
         }
-        if (isset($this->_dynamicAttributes[$key])) {
-            return $this->_dynamicAttributes[$key]($this, $this->_app);
+        if (isset($this->dynamicAttributes[$key])) {
+            return $this->dynamicAttributes[$key]($this, $this->app);
         }
         return null;
     }
 
     public function offsetSet($key, $value)
     {
-        $this->_data[$key] = $value;
+        $this->data[$key] = $value;
     }
 
     public function offsetExists($key)
     {
-        return isset($this->_data[$key])
-            || isset($this->_attributes[$key])
-            || isset($this->_dynamicAttributes[$key]);
+        return isset($this->data[$key])
+            || isset($this->attributes[$key])
+            || isset($this->dynamicAttributes[$key]);
     }
 
     public function offsetUnset($key)
     {
-        unset($this->_data[$key]);
+        unset($this->data[$key]);
     }
 
     public function addRequiredKey($key)
     {
-        $this->_requiredKeys[] = $key;
+        $this->requiredKeys[] = $key;
     }
 
     public function addAttributes(array $attributes)
     {
-        $this->_attributes = array_merge($this->_attributes, $attributes);
+        $this->attributes = array_merge($this->attributes, $attributes);
     }
     
     public function addDynamicAttributes(array $attributes)
     {
-        $this->_dynamicAttributes = array_merge($this->_dynamicAttributes, $attributes);
+        $this->dynamicAttributes = array_merge($this->dynamicAttributes, $attributes);
     }
     
     public function setData(array $data)
     {
-        foreach ($this->_requiredKeys as $key) {
+        foreach ($this->requiredKeys as $key) {
             if (!isset($data[$key])) {
                 throw new \Exception(sprintf('Missing key "%s"', $key));
             }
         }
-        $this->_data = $data;
+        $this->data = $data;
     }
     
     public function addData(array $data)
     {
-        $this->_data = array_merge($this->_data, $data);
+        $this->data = array_merge($this->data, $data);
     }
     
     public function clearData()
     {
-        foreach ($this->_data as $key => $value) {
-            if (!isset($this->_requiredKeys[$key])) {
+        foreach ($this->data as $key => $value) {
+            if (!isset($this->requiredKeys[$key])) {
                 unset($this[$key]);
             }
         }
@@ -115,8 +115,8 @@ abstract class Model implements \ArrayAccess
     
     public function toArray()
     {
-        $data = $this->_data;
-        foreach (array_keys($this->_attributes) as $key) {
+        $data = $this->data;
+        foreach (array_keys($this->attributes) as $key) {
             if (!isset($data[$key])) {
                 $data[$key] = $this[$key];
             }
@@ -193,11 +193,12 @@ abstract class Model implements \ArrayAccess
                 if ($model->isRoot) {
                     return array();
                 }
-                return $app['gizmo.cache']->getFolders($model->parent, '/^\d+?\.(?!' . preg_quote($model->slug) . ')/');
+                return $app['gizmo.cache']->getFolders($model->parent,
+                    '/^\d+?\.(?!' . preg_quote($model->slug) . ')/');
             },
             'siblingsWitSelf' => function ($model, $app) {
                 if ($model->isRoot) {
-                    return (array) $model->fullPath;
+                    return array();
                 }
                 return $app['gizmo.cache']->getFolders($model->parent, '/^\d+?\./');
             },

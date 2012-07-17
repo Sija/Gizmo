@@ -7,7 +7,7 @@ use Symfony\Component\Yaml\Yaml;
 class Page extends Model
 {
     protected
-        $_requiredKeys = array('fullPath', 'metaFile');
+        $requiredKeys = array('fullPath', 'metaFile');
     
     public function setData(array $data)
     {
@@ -19,7 +19,7 @@ class Page extends Model
     {
         parent::setDefaultAttributes();
         
-        $assetTypes = $this->_app['gizmo.asset_factory']->getAssetMap();
+        $assetTypes = $this->app['gizmo.asset_factory']->getAssetMap();
         foreach ($assetTypes as $class => $extensions) {
             $key = sprintf('%ss', strtolower(preg_replace('/^((.+?)\\\)?(.+?)$/', '\\3', $class)));
             $this->addAttributes(array(
