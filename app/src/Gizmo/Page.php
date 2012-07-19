@@ -4,15 +4,29 @@ namespace Gizmo;
 
 use Symfony\Component\Yaml\Yaml;
 
-class Page extends Model
+class Page extends Model implements \ArrayAccess
 {
     protected
         $requiredKeys = array('fullPath', 'metaFile');
     
-    public function setData(array $data)
+    public function offsetGet($key)
     {
-        parent::setData($data);
-        parent::addData($this->modelMeta);
+        return isset($this[$key]) ? $this->meta[$key] : null;
+    }
+
+    public function offsetSet($key, $value)
+    {
+        $this->meta[$key] = $value;
+    }
+
+    public function offsetExists($key)
+    {
+        return isset($this->meta[$key]);
+    }
+
+    public function offsetUnset($key)
+    {
+        unset($this->meta[$key]);
     }
     
     protected function setDefaultAttributes()
@@ -44,7 +58,7 @@ class Page extends Model
                 $modelName = preg_replace('/([^.]+\.)?([^.]+)$/', '\\2', $modelName);
                 return $modelName;
             },
-            'modelMeta' => function ($page, $gizmo) {
+            'meta' => function ($page, $gizmo) {
                 $sharedFiles = array();
                 # need to take account for 'fake' level 0 reserved for index page
                 for ($i = $page->level ?: 1; $i >= 0; --$i) {
@@ -83,7 +97,7 @@ class Page extends Model
                 return filemtime($page->metaFile);
             },
             'thumb' => function ($page, $gizmo) {
-                $thumbnails = $gizmo['cache']->getFiles($page->fullPath, '/thumb\.(gif|png|jpe?g)$/i');
+                $thumbnails = $gizmo['cache']->getFiles($page->fullPath, '/^thumb\.(gif|png|jpe?g)$/i');
                 return empty($thumbnails) ? false : $thumbnails[0];
             }
         ));

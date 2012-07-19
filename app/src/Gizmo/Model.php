@@ -2,7 +2,7 @@
 
 namespace Gizmo;
 
-abstract class Model implements \ArrayAccess
+abstract class Model
 {
     protected
         $gizmo = null,
@@ -25,55 +25,43 @@ abstract class Model implements \ArrayAccess
     
     public function __get($key)
     {
-        return $this[$key];
+        return $this->get($key);
     }
     
     public function __set($key, $value)
     {
-        $this[$key] = $value;
+        $this->set($key, $value);
     }
     
     public function __isset($key)
     {
-        return isset($this[$key]);
+        return isset($this->data[$key])
+            || isset($this->attributes[$key])
+            || isset($this->dynamicAttributes[$key]);
     }
     
     public function __unset($key)
     {
-        unset($this[$key]);
+        unset($this->data[$key]);
     }
-    
-    public function offsetGet($key)
-    {
+
+    public function get($key) {
         if (isset($this->data[$key]))
             return $this->data[$key];
         
         if (isset($this->attributes[$key]))
-            return $this[$key] = $this->attributes[$key]($this, $this->gizmo);
+            return $this->$key = $this->attributes[$key]($this, $this->gizmo);
         
         if (isset($this->dynamicAttributes[$key]))
             return $this->dynamicAttributes[$key]($this, $this->gizmo);
         
         return null;
     }
-
-    public function offsetSet($key, $value)
-    {
+    
+    public function set($key, $value) {
         $this->data[$key] = $value;
     }
-
-    public function offsetExists($key)
-    {
-        return isset($this->data[$key])
-            || isset($this->attributes[$key])
-            || isset($this->dynamicAttributes[$key]);
-    }
-
-    public function offsetUnset($key)
-    {
-        unset($this->data[$key]);
-    }
-
+    
     public function addRequiredKey($key)
     {
         $this->requiredKeys[] = $key;
@@ -107,7 +95,7 @@ abstract class Model implements \ArrayAccess
     {
         foreach ($this->data as $key => $value) {
             if (!isset($this->requiredKeys[$key])) {
-                unset($this[$key]);
+                unset($this->$key);
             }
         }
     }
@@ -117,7 +105,7 @@ abstract class Model implements \ArrayAccess
         $data = $this->data;
         foreach (array_keys($this->attributes) as $key) {
             if (!isset($data[$key]))
-                $data[$key] = $this[$key];
+                $data[$key] = $this->$key;
         }
         return $data;
     }
