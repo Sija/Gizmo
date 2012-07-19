@@ -5,17 +5,17 @@ namespace Gizmo;
 abstract class ModelFactory
 {
     protected
-        $app = null,
+        $gizmo = null,
         $store = array();
     
-    public function __construct(\Silex\Application $app)
+    public function __construct(Gizmo $gizmo)
     {
-        $this->app = $app;
+        $this->gizmo = $gizmo;
     }
     
     public function get($path)
     {
-        if (0 === strpos($path, $this->app['gizmo.content_path'])) {
+        if (0 === strpos($path, $this->gizmo['content_path'])) {
             return $this->fromFullPath($path);
         }
         return $this->fromPath($path);
@@ -23,7 +23,7 @@ abstract class ModelFactory
     
     public function fromPath($path)
     {
-        $fullPath = $this->app['gizmo.expand_path']($path);
+        $fullPath = $this->gizmo['expand_path']($path);
         if ($fullPath) {
             return $this->fromFullPath($fullPath);
         }
@@ -32,7 +32,7 @@ abstract class ModelFactory
     
     public function fromFullPath($fullPath)
     {
-        if (0 !== strpos($fullPath, $this->app['gizmo.content_path'])) {
+        if (0 !== strpos($fullPath, $this->gizmo['content_path'])) {
             return false;
         }
         if (isset($this->store[$fullPath])) {

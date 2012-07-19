@@ -11,7 +11,7 @@ class PageFactory extends ModelFactory
         }
         $metaFile = $this->findMetaFile($fullPath);
         if ($metaFile) {
-            $page = new Page($this->app, array(
+            $page = new Page($this->gizmo, array(
                 'fullPath' => $fullPath,
                 'metaFile' => $metaFile
             ));
@@ -22,7 +22,7 @@ class PageFactory extends ModelFactory
     
     protected function findMetaFile($fullPath)
     {
-        $metaFiles = $this->app['gizmo.cache']->getFiles($fullPath, '/^.(?<!_)(.+?)\.yml$/');
+        $metaFiles = $this->gizmo['cache']->getFiles($fullPath, '/^.(?<!_)(.+?)\.yml$/');
         if (empty($metaFiles)) {
             return null;
         }

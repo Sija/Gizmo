@@ -11,6 +11,7 @@ class Cache
     
     public function addFolder($dir)
     {
+        $dir = rtrim($dir, '/');
         $it = Finder::create()
           ->depth(0)
           ->in($dir);
@@ -33,6 +34,7 @@ class Cache
 
     public function getFilesOrFolders($dir, $regex = null, $with_files = true, $with_folders = true)
     {
+        $dir = rtrim($dir, '/');
         if (!isset($this->store[$dir])) {
             return array();
         }

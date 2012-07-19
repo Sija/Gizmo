@@ -10,9 +10,9 @@ class AssetFactory extends ModelFactory
         $assetMap = array(),
         $extensionMap = array();
     
-    public function __construct(\Silex\Application $app)
+    public function __construct(Gizmo $gizmo)
     {
-        parent::__construct($app);
+        parent::__construct($gizmo);
         self::loadAssetClasses();
         
         foreach (get_declared_classes() as $class) {
@@ -38,7 +38,7 @@ class AssetFactory extends ModelFactory
         }
         $assetClass = $this->findAssetClass($fullPath);
         if ($assetClass) {
-            $asset = new $assetClass($this->app, array(
+            $asset = new $assetClass($this->gizmo, array(
                 'fullPath' => $fullPath
             ));
             return $asset;

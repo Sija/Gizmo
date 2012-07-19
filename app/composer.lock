@@ -1,5 +1,5 @@
 {
-    "hash": "26b022cb5a4dc5035a8946841bcfb196",
+    "hash": "a9db5187206f2562eeeaad8aafa7cce7",
     "packages": [
         {
             "package": "fate/silex-extensions",
@@ -8,10 +8,16 @@
             "commit-date": "1341410252"
         },
         {
-            "package": "kriswallsmith/assetic",
+            "package": "igorw/config-service-provider",
             "version": "dev-master",
-            "source-reference": "d6f89a3170c5280ad554347dc113eb25fdf00ad7",
-            "commit-date": "1339515714"
+            "source-reference": "v1.0.0",
+            "commit-date": "1342224754"
+        },
+        {
+            "package": "imagine/Imagine",
+            "version": "dev-master",
+            "source-reference": "v0.2.8",
+            "commit-date": "1322638721"
         },
         {
             "package": "pimple/pimple",
@@ -34,8 +40,8 @@
         {
             "package": "silex/silex",
             "version": "dev-master",
-            "source-reference": "b9277c0e378ff1bce2a3e974cb801b6d9b0b5d5f",
-            "commit-date": "1342380872"
+            "source-reference": "81bafcc6ae67db7aa3be49db382287efe02dfbd4",
+            "commit-date": "1342601028"
         },
         {
             "package": "symfony/event-dispatcher",
@@ -82,20 +88,8 @@
         {
             "package": "symfony/http-kernel",
             "version": "dev-master",
-            "source-reference": "6df39b97d0815fa493c84ed448eb6cc961652303",
-            "commit-date": "1342376835"
-        },
-        {
-            "package": "symfony/process",
-            "version": "dev-master",
-            "alias-pretty-version": "2.1.x-dev",
-            "alias-version": "2.1.9999999.9999999-dev"
-        },
-        {
-            "package": "symfony/process",
-            "version": "dev-master",
-            "source-reference": "v2.1.0-BETA3",
-            "commit-date": "1342347231"
+            "source-reference": "507618b0f3ffb626c81ffc7eda73e4d4f1b7b51a",
+            "commit-date": "1342600793"
         },
         {
             "package": "symfony/routing",
@@ -108,6 +102,18 @@
             "version": "dev-master",
             "source-reference": "v2.1.0-BETA3",
             "commit-date": "1342347231"
+        },
+        {
+            "package": "symfony/twig-bridge",
+            "version": "dev-master",
+            "alias-pretty-version": "2.1.x-dev",
+            "alias-version": "2.1.9999999.9999999-dev"
+        },
+        {
+            "package": "symfony/twig-bridge",
+            "version": "dev-master",
+            "source-reference": "da5cc8681e50087b5d4495e3b5f16bc87ac0a72b",
+            "commit-date": "1342598932"
         },
         {
             "package": "symfony/yaml",
@@ -136,8 +142,8 @@
         {
             "package": "twig/twig",
             "version": "dev-master",
-            "source-reference": "d45664045194ef62573c153c424508527105041e",
-            "commit-date": "1342424564"
+            "source-reference": "b9ce6063824c15376b781327d3bb432ed5f81b16",
+            "commit-date": "1342645648"
         }
     ],
     "packages-dev": null,
@@ -148,6 +154,7 @@
     "stability-flags": {
         "twig/extensions": 20,
         "fate/silex-extensions": 20,
-        "kriswallsmith/assetic": 20
+        "igorw/config-service-provider": 20,
+        "imagine/imagine": 20
     }
 }

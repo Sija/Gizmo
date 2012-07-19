@@ -19,43 +19,43 @@ class Page extends Model
     {
         parent::setDefaultAttributes();
         
-        $assetTypes = $this->app['gizmo.asset_factory']->getAssetMap();
+        $assetTypes = $this->gizmo['asset_factory']->getAssetMap();
         foreach ($assetTypes as $class => $extensions) {
             $key = sprintf('%ss', strtolower(preg_replace('/^((.+?)\\\)?(.+?)$/', '\\3', $class)));
             $this->addAttributes(array(
-                $key => function ($page, $app) use ($extensions) {
-                    return $app['gizmo.cache']->getFiles($page->fullPath,
+                $key => function ($page, $gizmo) use ($extensions) {
+                    return $gizmo['cache']->getFiles($page->fullPath,
                         '/^(?!thumb).(?<!_)(.+?)\.(' . join('|', $extensions) . ')$/i');
                 }
             ));
         }
         $this->addAttributes(array(
-            'files' => function ($page, $app) {
-                return $app['gizmo.cache']->getFiles($page->fullPath,
+            'files' => function ($page, $gizmo) {
+                return $gizmo['cache']->getFiles($page->fullPath,
                     '/^(?!thumb).(?<!_)(.+?)\.(?!yml)([\w\d]+?)$/i');
             }
         ));
         $this->addAttributes(array(
-            'format' => function ($page, $app) {
-                return $app['request']->getRequestFormat();
+            'format' => function ($page, $gizmo) {
+                return $gizmo['request']->getRequestFormat();
             },
             'modelName' => function ($page) {
                 $modelName = preg_replace('/\.yml$/', '', basename($page->metaFile));
                 $modelName = preg_replace('/([^.]+\.)?([^.]+)$/', '\\2', $modelName);
                 return $modelName;
             },
-            'modelMeta' => function ($page, $app) {
+            'modelMeta' => function ($page, $gizmo) {
                 $sharedFiles = array();
-                for ($i = $page->level; $i >= 0; --$i) {
-                    $sharedFiles = array_merge($sharedFiles, $app['gizmo.cache']->getFiles(
+                # need to take account for 'fake' level 0 reserved for index page
+                for ($i = $page->level ?: 1; $i >= 0; --$i) {
+                    $sharedFiles = array_merge($sharedFiles, $gizmo['cache']->getFiles(
                         realpath($page->fullPath . str_repeat('/..', $i)),
                         '/^_shared\.yml$/'));
                 }
                 $data = array();
                 foreach ($sharedFiles as $file) {
-                    if ($loadedData = Yaml::parse($file)) {
+                    if ($loadedData = Yaml::parse($file))
                         $data = array_merge($data, $loadedData);
-                    }
                 }
                 $modelMeta = Yaml::parse($page->metaFile);
                 if (!empty($modelMeta)) {
@@ -63,51 +63,36 @@ class Page extends Model
                 }
                 return $data;
             },
-            'template' => function ($page, $app) {
-                $files = $app['gizmo.cache']->getFiles($app['gizmo.templates_path'], 
+            'template' => function ($page, $gizmo) {
+                $files = $gizmo['cache']->getFiles($gizmo['templates_path'], 
                     sprintf('/%s(.*?)\.%s\.twig/i', $page->modelName, $page->format));
 
                 if (!empty($files)) {
                     return basename($files[0]);
                 }
                 if ($page->path != '404') {
-                    $files = $app['gizmo.cache']->getFiles($app['gizmo.templates_path'], 
+                    $files = $gizmo['cache']->getFiles($gizmo['templates_path'], 
                         sprintf('/%s(.*?)\.(.+?)\.twig/i', $page->modelName));
                     
-                    if (!empty($files)) {
+                    if (!empty($files))
                         return null;
-                    }
                 }
-                return $app['gizmo.default_layout'];
+                return $gizmo['options']['default_layout'];
             },
             'updated' => function ($page) {
                 return filemtime($page->metaFile);
             },
-            'thumb' => function ($page, $app) {
-                $thumbnails = $app['gizmo.cache']->getFiles($page->fullPath, '/thumb\.(gif|png|jpe?g)$/i');
+            'thumb' => function ($page, $gizmo) {
+                $thumbnails = $gizmo['cache']->getFiles($page->fullPath, '/thumb\.(gif|png|jpe?g)$/i');
                 return empty($thumbnails) ? false : $thumbnails[0];
             }
         ));
         $this->addDynamicAttributes(array(
-            'isCurrent' => function ($page, $app) {
-                $requestUri = rtrim($app['request']->getRequestUri(), '/');
-                $baseUrl = $app['request']->getBaseUrl();
-
-                if ('index' == $page->path) {
-                    return $requestUri == $baseUrl;
-                } else {
-                    return $requestUri == $baseUrl . $page->permalink;
-                }
+            'isCurrent' => function ($page, $gizmo) {
+                return $gizmo['current_model']->isEqual($page);
             },
-            'inPath' => function ($page, $app) {
-                $requestUri = rtrim($app['request']->getRequestUri(), '/');
-                $baseUrl = $app['request']->getBaseUrl();
-
-                if ('index' === $page->path) {
-                    return $requestUri == $baseUrl;
-                } else {
-                    return preg_match("#(/{$page->slug}$|{$page->slug}/)#", $requestUri);
-                }
+            'inPath' => function ($page, $gizmo) {
+                return $page->isCurrent || in_array($page->fullPath, $gizmo['current_model']->parents);
             }
         ));
     }

@@ -26,9 +26,11 @@
         "twig/extensions": "dev-master",
         "symfony/finder": "2.1.*",
         "symfony/yaml": "2.1.*",
+        "symfony/twig-bridge": "2.1.*",
         "silex/silex": "1.0.*",
         "fate/silex-extensions": "dev-master",
-        "kriswallsmith/assetic": "dev-master"
+        "igorw/config-service-provider": "dev-master",
+        "imagine/Imagine": "dev-master"
     },
     "autoload": {
         "psr-0": {

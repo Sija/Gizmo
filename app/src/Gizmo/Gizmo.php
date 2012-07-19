@@ -3,178 +3,174 @@
 namespace Gizmo;
 
 use Silex\Application;
-use Silex\ServiceProviderInterface;
-use Silex\ControllerProviderInterface;
-use Silex\ControllerCollection;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class Gizmo implements ServiceProviderInterface, ControllerProviderInterface
+class Gizmo extends \Pimple
 {
     const VERSION = '1.0b';
     
-    protected
-        $app = null;
-    
-    public function register(Application $app)
+    public function __construct(Application $app)
     {
-        $this->app = $app;
+        $this['request'] = $app['request'];
+        $this['app'] = $app;
+        $this['options'] = array_merge(array(
+            'path'           => $app['gizmo.path'],
+            'mount_point'    => $app['gizmo.mount_point'],
+            
+            'timezone'       => 'UTC',
+            'default_layout' => 'base.html.twig',
+        ),
+        $app['gizmo.options']);
         
-        $self = $this;
-        $app['gizmo'] = $app->share(function () use ($self) {
-            return $self;
-        });
-        $app['gizmo.cache'] = $app->share(function ($app) {
+        $defaultPaths = array(
+            'app'       => null,
+            'content'   => null,
+            'templates' => null,
+            'public'    => null,
+            'cache'     => 'app/cache',
+        );
+        foreach ($defaultPaths as $name => $path) {
+            $key = sprintf('%s_path', $name);
+            if (!isset($this[$key])) {
+                $this[$key] = $app['gizmo.path'] . '/' . ($path ?: $name);
+            } else {
+                $this[$key] = rtrim($this['key'], '/');
+            }
+        }
+        // $configFile = $this['content_path']. '/config.yml';
+        // if (file_exists($configFile)) {
+        //     $app->register(new \Igorw\Silex\ConfigServiceProvider($configFile));
+        // }
+        
+        date_default_timezone_set($this['options']['timezone']);
+
+        $gizmo = $this;
+        $this['cache'] = $this->share(function ($gizmo) {
             $cache = new Cache();
-            $cache->addFolder($app['gizmo.content_path']);
-            $cache->addFolder($app['gizmo.templates_path']);
-            $cache->addFolder($app['gizmo.public_path']);
+            $cache->addFolder($gizmo['content_path']);
+            $cache->addFolder($gizmo['templates_path']);
+            $cache->addFolder($gizmo['public_path']);
             return $cache;
         });
-        $app['gizmo.page_factory'] = $app->share(function ($app) {
-            return new PageFactory($app);
+        $this['page_factory'] = $this->share(function ($gizmo) {
+            return new PageFactory($gizmo);
         });
-        $app['gizmo.asset_factory'] = $app->share(function ($app) {
-            return new AssetFactory($app);
+        $this['asset_factory'] = $this->share(function ($gizmo) {
+            return new AssetFactory($gizmo);
         });
-        $app['gizmo.expand_path'] = $app->protect(function ($path) use ($app) {
-            $content_path = $app['gizmo.content_path'];
-            $path = trim($path, '/');
-            if ($path) {
-                # Split the url and recursively unclean the parts into folder names
-                $path_parts = explode('/', $path);
-                foreach ($path_parts as $part) {
-                    if ('_' === $part{0}) return false;
-                    
-                    $items = $app['gizmo.cache']->getFilesOrFolders($content_path,
-                        '/^(\d+?\.)?('. preg_quote($part) .')$/');
-                    if (empty($items)) return false;
+        $this['expand_path'] = $this->protect(function ($path) use ($gizmo) {
+            $contentPath = $gizmo['content_path'];
+            $path = trim($path, '/') ?: 'index';
 
-                    foreach ($items as $dir) {
-                        $relative_path = substr($dir, strlen($content_path));
-                        $content_path .= $relative_path;
-                    }
+            # Split the url and recursively unclean the parts into folder names
+            $pathSegments = explode('/', $path);
+            foreach ($pathSegments as $segment) {
+                if ('_' === $segment{0}) return false;
+                
+                $items = $gizmo['cache']->getFilesOrFolders($contentPath,
+                    '/^(\d+?\.)?('. preg_quote($segment) .')$/');
+                if (empty($items)) return false;
+
+                foreach ($items as $dir) {
+                    $relativePath = substr($dir, strlen($contentPath));
+                    $contentPath .= $relativePath;
                 }
             }
-            return $content_path;
+            return $contentPath;
         });
-        $app['gizmo.model'] = $app->protect(function ($path) use ($app) {
-            if (0 !== strpos($path, $app['gizmo.content_path'])) {
-                if (!$path = $app['gizmo.expand_path']($path)) {
+        $this['model'] = $this->protect(function ($path) use ($gizmo) {
+            if (0 !== strpos($path, $gizmo['content_path'])) {
+                if (!$path = $gizmo['expand_path']($path)) {
                     return false;
                 }
             }
             if (is_dir($path)) {
-                return $app['gizmo.page']($path);
+                return $gizmo['page']($path);
             }
             if (is_file($path)) {
-                return $app['gizmo.asset']($path);
+                return $gizmo['asset']($path);
             }
             return false;
         });
-        $app['gizmo.page'] = $app->protect(function ($path) use ($app) {
-            return $app['gizmo.page_factory']->get($path);
+        $this['page'] = $this->protect(function ($path) use ($gizmo) {
+            return $gizmo['page_factory']->get($path);
         });
-        $app['gizmo.asset'] = $app->protect(function ($path) use ($app) {
-            return $app['gizmo.asset_factory']->get($path);
+        $this['asset'] = $this->protect(function ($path) use ($gizmo) {
+            return $gizmo['asset_factory']->get($path);
         });
-    }
-
-    public function boot(Application $app)
-    {
-        date_default_timezone_set(isset($app['gizmo.timezone']) ? $app['gizmo.timezone'] : 'UTC');
         
-        $app['gizmo.cache_path'] = $app['gizmo.app_path'] . '/cache';
+        $this['imagine'] = $this->protect(function () {
+            if (class_exists('Imagick', false)) {
+                return new \Imagine\Imagick\Imagine();
+            }
+            return new \Imagine\Gd\Imagine();
+        });
         
         $app->register(new \Silex\Provider\TwigServiceProvider(), array(
-            'twig.path' => $app['gizmo.templates_path'],
+            'twig.path' => $this['templates_path'],
             'twig.options' => array(
                 'base_template_class' => 'Gizmo\\Twig_Template',
                 'strict_variables' => false,
-                'cache' => $app['gizmo.cache_path'] . '/templates',
+                'cache' => $this['cache_path'] . '/templates',
             ),
         ));
-        $app['twig']->addExtension(new \Twig_Extensions_Extension_Text());
-        $app['twig']->addExtension(new \Twig_Extensions_Extension_Debug());
-        $app['twig']->addExtension(new Twig_Extension_Gizmo($app));
+        $app['twig'] = $app->share($app->extend('twig', function($twig, $app) use ($gizmo) {
+            $twig->addExtension(new \Twig_Extensions_Extension_Text());
+            $twig->addExtension(new \Twig_Extensions_Extension_Debug());
+            $twig->addExtension(new Twig_Extension($gizmo));
+            return $twig;
+        }));
+        $app->register(new \Silex\Provider\UrlGeneratorServiceProvider());
         
-        $app->register(new \SilexExtension\AsseticExtension(), array(
-            'assetic.path_to_web' => $app['gizmo.assets_path'],
-            'assetic.options' => array(
-                'formulae_cache_dir' => $app['gizmo.cache_path'] . '/assetic',
-                'debug' => $app['debug']
-            ),
-        ));
         $app['markdown.features'] = array(
             'entities' => true
         );
         $app->register(new \SilexExtension\MarkdownExtension());
-        
-        if (isset($app['gizmo.mount_point'])) {
-            $app->mount($app['gizmo.mount_point'], $this);
-        }
     }
 
-    public function connect(Application $app)
-    {
-        $controllers = $app['controllers_factory'];
-
-        // Bind default catch-all route for pages
-        $controllers->match('/{path}.{_format}', function ($path) use ($app) {
-            return $app['gizmo']->dispatch($path);
-
-        })->bind('page')
-          ->assert('path', '.+?')
-          ->assert('_format', 'html|json|xml|rss|rdf|atom')
-          ->value('_format', 'html');
-
-        // Homepage route
-        $controllers->match('/', function () use ($app) {
-            return $app['gizmo']->dispatch();
-
-        })->bind('homepage');
-
-        return $controllers;
-    }
-
-    public function render404()
-    {
-        $response = new Response(null, 404);
-        if ($page404 = $this->app['gizmo.page_factory']->fromPath('404')) {
-            $response->setContent($this->renderModel($page404));
-            return $response;
-        }
-        $file404 = $this->app['gizmo.public_path'] . '/404.html';
-        if (file_exists($file404)) {
-            $response->setContent(file_get_contents($file404));
-            return $response;
-        }
-        $this->app->abort(404, 'Sorry, the requested page could not be found.');
-    }
-    
-    public function renderModel(Model $model)
+    public function renderModel(Model $model, $code = null)
     {
         // print_r($model->toArray()); die;
         
+        $response = new Response(null, $code ?: 200);
         if ($model instanceof Page && $model->template) {
-            return $this->app['twig']->render($model->template, array('page' => $model));
+            $content = $this['app']['twig']->render($model->template, array('page' => $model));
+            $response->setContent($content);
+            return $response;
         }
         if ($model instanceof Asset) {
-            return new Response($model->getContents(), 200, array(
-                'Content-Type' => $model->mimeType
-            ));
+            $response->headers->set('Content-Type', $model->mimeType);
+            $response->setContent($model->getContents());
+            return $response;
         }
         return false;
     }
     
     public function dispatch($path = null)
     {
-        if ($model = $this->app['gizmo.model']($path)) {
+        if ($model = $this['model']($path)) {
+            $this['current_model'] = $model;
             if ($rendered = $this->renderModel($model)) {
                 return $rendered;
             }
         }
-        return $this->render404();
+        return $this->dispatch404();
+    }
+
+    public function dispatch404()
+    {
+        if ($page404 = $this['page']('404')) {
+            $this['current_model'] = $page404;
+            if ($rendered = $this->renderModel($page404, 404)) {
+                return $rendered;
+            }
+        }
+        $file404 = $this['public_path'] . '/404.html';
+        if (file_exists($file404)) {
+            return file_get_contents($file404);
+        }
+        $this['app']->abort(404, 'Sorry, the requested page could not be found.');
     }
 }

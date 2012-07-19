@@ -5,15 +5,15 @@ namespace Gizmo;
 abstract class Model implements \ArrayAccess
 {
     protected
-        $app = null,
+        $gizmo = null,
         $attributes = array(),
         $dynamicAttributes = array(),
         $data = array(),
         $requiredKeys = array('fullPath');
     
-    public function __construct(\Silex\Application $app, array $data = array())
+    public function __construct(Gizmo $gizmo, array $data = array())
     {
-        $this->app = $app;
+        $this->gizmo = $gizmo;
         $this->setDefaultAttributes();
         $this->setData($data);
     }
@@ -45,15 +45,15 @@ abstract class Model implements \ArrayAccess
     
     public function offsetGet($key)
     {
-        if (isset($this->data[$key])) {
+        if (isset($this->data[$key]))
             return $this->data[$key];
-        }
-        if (isset($this->attributes[$key])) {
-            return $this[$key] = $this->attributes[$key]($this, $this->app);
-        }
-        if (isset($this->dynamicAttributes[$key])) {
-            return $this->dynamicAttributes[$key]($this, $this->app);
-        }
+        
+        if (isset($this->attributes[$key]))
+            return $this[$key] = $this->attributes[$key]($this, $this->gizmo);
+        
+        if (isset($this->dynamicAttributes[$key]))
+            return $this->dynamicAttributes[$key]($this, $this->gizmo);
+        
         return null;
     }
 
@@ -92,9 +92,8 @@ abstract class Model implements \ArrayAccess
     public function setData(array $data)
     {
         foreach ($this->requiredKeys as $key) {
-            if (!isset($data[$key])) {
+            if (!isset($data[$key]))
                 throw new \Exception(sprintf('Missing key "%s"', $key));
-            }
         }
         $this->data = $data;
     }
@@ -117,21 +116,25 @@ abstract class Model implements \ArrayAccess
     {
         $data = $this->data;
         foreach (array_keys($this->attributes) as $key) {
-            if (!isset($data[$key])) {
+            if (!isset($data[$key]))
                 $data[$key] = $this[$key];
-            }
         }
         return $data;
     }
-
+    
+    public function isEqual(Model $other)
+    {
+        return $this->path === $other->path;
+    }
+    
     protected function setDefaultAttributes()
     {
         $this->addAttributes(array(
-            'path' => function ($model, $app) {
-                if (0 !== strpos($model->fullPath, $app['gizmo.content_path'])) {
+            'path' => function ($model, $gizmo) {
+                if (0 !== strpos($model->fullPath, $gizmo['content_path']))
                     return false;
-                }
-                $path = preg_replace("#^{$app['gizmo.content_path']}/?#", '', $model->fullPath);
+
+                $path = preg_replace("#^{$gizmo['content_path']}/?#", '', $model->fullPath);
                 $path = preg_replace(array('/^\d+?\./', '/(\/)\d+?\./'), '\\1', $path);
                 $path = trim($path, '/') ?: 'index';
                 return $path;
@@ -139,70 +142,89 @@ abstract class Model implements \ArrayAccess
             'slug' => function ($model) {
                 return preg_replace('#(.*?)/([^/]+)$#', '\\2', $model->path);
             },
-            'permalink' => function ($model, $app) {
-                $url = rtrim($app['gizmo.mount_point'], '/') . '/' . $model->path;
-                $url = preg_replace('/\/index$/', '', $url);
+            'permalink' => function ($model, $gizmo) {
+                $url = rtrim($gizmo['options']['mount_point'], '/') . '/';
+                if (!$model->isHomepage) {
+                    $url .= $model->path;
+                }
                 return $url;
             },
-            'url' => function ($model, $app) {
-                return $app['request']->getBaseURL() . $model->permalink;
+            'url' => function ($model, $gizmo) {
+                return $gizmo['request']->getBaseURL() . $model->permalink;
             },
-            'uri' => function ($model, $app) {
-                return $app['request']->getUriForPath($model->permalink);
+            'uri' => function ($model, $gizmo) {
+                return $gizmo['request']->getUriForPath($model->permalink);
             },
             'title' => function ($model) {
                 return ucfirst(preg_replace(
-                    array('/[-_]/', '/\.[\w\d]+?$/', '/^\d+?\./'),
-                    array(' ', '', ''),
+                    array('/[-_]/', '/\.[\w\d]+?$/'),
+                    array(' ', ''),
                     $model->slug
                 ));
             },
             'updated' => function ($model) {
                 return filemtime($model->fullPath);
             },
-            'root' => function ($model, $app) {
-                return $app['gizmo.cache']->getFolders($app['gizmo.content_path'], '/^\d+?\./');
+            'root' => function ($model, $gizmo) {
+                return $gizmo['cache']->getFolders($gizmo['content_path'], '/^\d+?\./');
             },
-            'parent' => function ($model, $app) {
+            'parent' => function ($model, $gizmo) {
+                if ($model->isHomepage)
+                    return null;
+
                 $pathSegments = explode('/', $model->path);
                 $parents = array();
-                while (count($pathSegments) >= 1) {
+                while (count($pathSegments) > 0) {
                     array_pop($pathSegments);
-                    if ($parent = $app['gizmo.page'](join('/', $pathSegments))) {
+                    if ($parent = $gizmo['page'](join('/', $pathSegments)))
                         return $parent->fullPath;
-                    }
                 }
                 return null;
             },
-            'parents' => function ($model, $app) {
+            'parents' => function ($model, $gizmo) {
+                if ($model->isHomepage)
+                    return array();
+                
                 $pathSegments = explode('/', $model->path);
                 $parents = array();
-                while (count($pathSegments) >= 1) {
+                while (count($pathSegments) > 0) {
                     array_pop($pathSegments);
-                    if ($parent = $app['gizmo.page'](join('/', $pathSegments))) {
+                    if ($parent = $gizmo['page'](join('/', $pathSegments)))
                         $parents[] = $parent->fullPath;
-                    }
                 }
                 $parents = array_reverse($parents);
                 return $parents;
             },
-            'children' => function ($model, $app) {
-                return $app['gizmo.cache']->getFolders($model->fullPath, '/^\d+?\./');
+            'children' => function ($model, $gizmo) {
+                return $gizmo['cache']->getFolders($model->fullPath, '/^\d+?\./');
             },
-            'siblings' => function ($model, $app) {
-                if ($model->isRoot) {
+            'siblings' => function ($model, $gizmo) {
+                if ($model->isHomepage)
                     return array();
+                
+                # need to account for 'fake' index page
+                $dir = $model->parent;
+                if ($model->level === 1) {
+                    $dir = preg_replace('#^(' . $gizmo['content_path'] . ')/+index$#', '\\1', $dir);
                 }
-                return $app['gizmo.cache']->getFolders($model->parent,
+                return $gizmo['cache']->getFolders($dir,
                     '/^\d+?\.(?!' . preg_quote($model->slug) . ')/');
             },
-            'siblingsWitSelf' => function ($model, $app) {
-                if ($model->isRoot) {
+            'siblingsWitSelf' => function ($model, $gizmo) {
+                if ($model->isHomepage)
                     return array();
+
+                # need to account for 'fake' index page
+                $dir = $model->parent;
+                if ($model->level === 1) {
+                    $dir = preg_replace('#^(' . $gizmo['content_path'] . ')/+index$#', '\\1', $dir);
                 }
-                return $app['gizmo.cache']->getFolders($model->parent, '/^\d+?\./');
+                return $gizmo['cache']->getFolders($dir, '/^\d+?\./');
             },
             'closestSiblings' => function ($model) {
+                if ($model->isHidden)
+                    return array(null, null);
+                
                 $siblings = $model->siblingsWitSelf;
                 $neighbors = array();
                 # flip keys/values
@@ -214,17 +236,16 @@ abstract class Model implements \ArrayAccess
                 $path = $model->fullPath;
                 if (!empty($siblings) && isset($siblings[$path])) {
                     # previous sibling
-                    if (isset($keys[$keyIndexes[$path] - 1])) {
+                    if (isset($keys[$keyIndexes[$path] - 1]))
                         $neighbors[] = $keys[$keyIndexes[$path] - 1];
-                    } else {
+                    else
                         $neighbors[] = $keys[count($keys) - 1];
-                    }
+                    
                     # next sibling
-                    if (isset($keys[$keyIndexes[$path] + 1])) {
+                    if (isset($keys[$keyIndexes[$path] + 1]))
                         $neighbors[] = $keys[$keyIndexes[$path] + 1];
-                    } else {
+                    else
                         $neighbors[] = $keys[0];
-                    }
                 }
                 return !empty($neighbors) ? $neighbors : array(null, null);
             },
@@ -232,18 +253,18 @@ abstract class Model implements \ArrayAccess
                 return $model->closestSiblings[0];
             },
             'previousSiblings' => function ($model) {
-                if (!$model->index) {
+                if ($model->isHidden)
                     return array();
-                }
+
                 return array_slice($model->siblingsWitSelf, 0, $model->index - 1);
             },
             'nextSibling' => function ($model) {
                 return $model->closestSiblings[1];
             },
             'nextSiblings' => function ($model) {
-                if (!$model->index) {
+                if ($model->isHidden)
                     return array();
-                }
+
                 $siblingsWitSelf = $model->siblingsWitSelf;
                 return array_slice($siblingsWitSelf, $model->index, count($siblingsWitSelf));
             },
@@ -252,25 +273,27 @@ abstract class Model implements \ArrayAccess
                 $siblings = $model->siblingsWitSelf;
                 foreach ($siblings as $sibling) {
                   ++$i;
-                  if ($sibling == $model->fullPath) {
+                  if ($sibling === $model->fullPath)
                       return $i;
-                  }
                 }
                 return 0;
             },
             'level' => function ($model) {
-                return !$model->isRoot
+                return !$model->isHomepage
                     ? 1 + substr_count($model->path, '/')
                     : 0;
             },
-            'isRoot' => function ($model, $app) {
-                return ($model->fullPath == $app['gizmo.content_path']);
+            'isHomepage' => function ($model) {
+                return $model->path === 'index';
+            },
+            'isHidden' => function ($model) {
+                return $model->index === 0;
             },
             'isFirst' => function ($model) {
-                return $model->index === 1;
+                return !$model->isHidden && $model->index === 1;
             },
             'isLast' => function ($model) {
-                return $model->index === count($model->siblingsWitSelf);
+                return !$model->isHidden && $model->index === count($model->siblingsWitSelf);
             }
         ));
     }

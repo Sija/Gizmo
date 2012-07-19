@@ -43,16 +43,16 @@ class Asset extends Model
                 $modelName = explode('\\', strtolower(get_class($asset)));
                 return $modelName[count($modelName) - 1];
             },
-            'children' => function ($asset, $app) {
-                return $app['gizmo.cache']->getFiles(preg_replace('/\.([^.]+)$/', '', $asset->fullPath),
+            'children' => function ($asset, $gizmo) {
+                return $gizmo['cache']->getFiles(preg_replace('/\.([^.]+)$/', '', $asset->fullPath),
                     '/^\d+?\.(.+?)\.(' . join('|', $asset->getSupportedExtensions()) . ')$/');
             },
-            'siblings' => function ($asset, $app) {
-                return $app['gizmo.cache']->getFiles($asset->parent,
+            'siblings' => function ($asset, $gizmo) {
+                return $gizmo['cache']->getFiles($asset->parent,
                     '/^\d+?\.(?!' . preg_quote($asset->slug) . ').+?\.(' . join('|', $asset->getSupportedExtensions()) . ')$/');
             },
-            'siblingsWitSelf' => function ($asset, $app) {
-                return $app['gizmo.cache']->getFiles($asset->parent,
+            'siblingsWitSelf' => function ($asset, $gizmo) {
+                return $gizmo['cache']->getFiles($asset->parent,
                     '/^\d+?\.(.+?)\.(' . join('|', $asset->getSupportedExtensions()) . ')$/');
             }
         ));
