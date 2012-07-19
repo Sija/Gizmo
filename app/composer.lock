@@ -76,8 +76,8 @@
         {
             "package": "symfony/http-foundation",
             "version": "dev-master",
-            "source-reference": "v2.1.0-BETA3",
-            "commit-date": "1342347231"
+            "source-reference": "65997af41789282d2048cf580c40a659648e555b",
+            "commit-date": "1342625313"
         },
         {
             "package": "symfony/http-kernel",
@@ -100,8 +100,8 @@
         {
             "package": "symfony/routing",
             "version": "dev-master",
-            "source-reference": "v2.1.0-BETA3",
-            "commit-date": "1342347231"
+            "source-reference": "3630f2d08515bbad980c0d654433b6689cf460a2",
+            "commit-date": "1342708743"
         },
         {
             "package": "symfony/twig-bridge",
@@ -142,8 +142,8 @@
         {
             "package": "twig/twig",
             "version": "dev-master",
-            "source-reference": "b9ce6063824c15376b781327d3bb432ed5f81b16",
-            "commit-date": "1342645648"
+            "source-reference": "7c3b987742ed8512ba70712e0ff8862c52eebbc9",
+            "commit-date": "1342675769"
         }
     ],
     "packages-dev": null,
