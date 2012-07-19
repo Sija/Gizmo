@@ -41,8 +41,10 @@ class Twig_Extension extends \Twig_Extension
         if ($model instanceof Page) {
             if ($model->thumb) {
                 $model = $this->gizmo['asset']($model->thumb);
-                if ($model && !($width && $height))
-                    return $model->url;
+                if (!($width && $height))
+                    if ($model) return $model->url;
+            } else {
+                $model = $model->images[0];
             }
         }
         if ($model instanceof Asset) {
