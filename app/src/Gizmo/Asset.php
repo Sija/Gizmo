@@ -39,6 +39,19 @@ class Asset extends Model
         parent::setDefaultAttributes();
         
         $this->addAttributes(array(
+            'path' => function ($model, $gizmo) {
+                if (0 !== strpos($model->fullPath, $gizmo['content_path']))
+                    return false;
+
+                $path = preg_replace("#^{$gizmo['content_path']}/?#", '', $model->fullPath);
+                $lastSegment = null;
+                $path = preg_replace_callback('#(/[^/]+)$#', function ($segment) use (&$lastSegment) {
+                    $lastSegment = $segment[0];
+                    return '';
+                }, $path);
+                $path = preg_replace(array('/^\d+?\./', '/(\/)\d+?\./'), '\\1', $path);
+                return $path . $lastSegment;
+            },
             'modelName' => function ($asset) {
                 $modelName = explode('\\', strtolower(get_class($asset)));
                 return $modelName[count($modelName) - 1];
@@ -48,13 +61,22 @@ class Asset extends Model
                     '/^\d+?\.(.+?)\.(' . join('|', $asset->getSupportedExtensions()) . ')$/');
             },
             'siblings' => function ($asset, $gizmo) {
+                if ($asset->isHidden)
+                    return array();
+                
                 return $gizmo['cache']->getFiles($asset->parent,
-                    '/^\d+?\.(?!' . preg_quote($asset->slug) . ').+?\.(' . join('|', $asset->getSupportedExtensions()) . ')$/');
+                    '/^(?!' . preg_quote($asset->slug) . ')\d+?\.(.+?)\.(' . join('|', $asset->getSupportedExtensions()) . ')$/');
             },
             'siblingsWitSelf' => function ($asset, $gizmo) {
+                if ($asset->isHidden)
+                    return array();
+                
                 return $gizmo['cache']->getFiles($asset->parent,
                     '/^\d+?\.(.+?)\.(' . join('|', $asset->getSupportedExtensions()) . ')$/');
-            }
+            },
+            'isHidden' => function ($model) {
+                return !preg_match('#/\d+\.([^\/.]+)\.([^\/.]+)$#', $model->fullPath);
+            },
         ));
     }
 }

@@ -2,8 +2,6 @@
 
 namespace Gizmo;
 
-use Silex\Application;
-
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -11,7 +9,7 @@ class Gizmo extends \Pimple
 {
     const VERSION = '1.0b';
     
-    public function __construct(Application $app)
+    public function __construct(\Silex\Application $app)
     {
         $this['request'] = $app['request'];
         $this['app'] = $app;
@@ -33,10 +31,10 @@ class Gizmo extends \Pimple
         );
         foreach ($defaultPaths as $name => $path) {
             $key = sprintf('%s_path', $name);
-            if (!isset($this[$key])) {
-                $this[$key] = $app['gizmo.path'] . '/' . ($path ?: $name);
+            if (isset($app['gizmo.' . $key])) {
+                $this[$key] = rtrim($app['gizmo.' . $key], '/');
             } else {
-                $this[$key] = rtrim($this['key'], '/');
+                $this[$key] = $app['gizmo.path'] . '/' . ($path ?: $name);
             }
         }
         // $configFile = $this['content_path']. '/config.yml';
@@ -70,21 +68,24 @@ class Gizmo extends \Pimple
                 if ('_' === $segment{0}) return false;
                 
                 $items = $gizmo['cache']->getFilesOrFolders($contentPath,
-                    '/^(\d+?\.)?('. preg_quote($segment) .')$/');
-                if (empty($items)) return false;
-
-                foreach ($items as $dir) {
-                    $relativePath = substr($dir, strlen($contentPath));
-                    $contentPath .= $relativePath;
+                    '/^'. (!strpos($segment, '.') ? '(\d+?\.)?' : '') .'('. preg_quote($segment) .')$/');
+                
+                switch (count($items)) {
+                    case 0: return false;
+                    case 1:
+                        $relativePath = substr($items[0], strlen($contentPath));
+                        $contentPath .= $relativePath;
+                        break;
+                    default:
+                        throw new \Exception(sprintf('There are %d items with name "%s"', count($items), $segment));
                 }
             }
             return $contentPath;
         });
         $this['model'] = $this->protect(function ($path) use ($gizmo) {
             if (0 !== strpos($path, $gizmo['content_path'])) {
-                if (!$path = $gizmo['expand_path']($path)) {
+                if (!$path = $gizmo['expand_path']($path))
                     return false;
-                }
             }
             if (is_dir($path)) {
                 return $gizmo['page']($path);
@@ -151,7 +152,7 @@ class Gizmo extends \Pimple
     public function dispatch($path = null)
     {
         if ($model = $this['model']($path)) {
-            $this['current_model'] = $model;
+            $this['dispatched_model'] = $model;
             if ($rendered = $this->renderModel($model)) {
                 return $rendered;
             }
@@ -162,7 +163,7 @@ class Gizmo extends \Pimple
     public function dispatch404()
     {
         if ($page404 = $this['page']('404')) {
-            $this['current_model'] = $page404;
+            $this['dispatched_model'] = $page404;
             if ($rendered = $this->renderModel($page404, 404)) {
                 return $rendered;
             }

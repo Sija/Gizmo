@@ -145,8 +145,8 @@ abstract class Model
             },
             'title' => function ($model) {
                 return ucfirst(preg_replace(
-                    array('/[-_]/', '/\.[\w\d]+?$/'),
-                    array(' ', ''),
+                    array('/[-_]/', '/\.[\w\d]+?$/', '/^\d+?\./'),
+                    array(' ', '', ''),
                     $model->slug
                 ));
             },
@@ -187,7 +187,7 @@ abstract class Model
                 return $gizmo['cache']->getFolders($model->fullPath, '/^\d+?\./');
             },
             'siblings' => function ($model, $gizmo) {
-                if ($model->isHomepage)
+                if ($model->isHidden)
                     return array();
                 
                 # need to account for 'fake' index page
@@ -199,7 +199,7 @@ abstract class Model
                     '/^\d+?\.(?!' . preg_quote($model->slug) . ')/');
             },
             'siblingsWitSelf' => function ($model, $gizmo) {
-                if ($model->isHomepage)
+                if ($model->isHidden)
                     return array();
 
                 # need to account for 'fake' index page
@@ -275,7 +275,7 @@ abstract class Model
                 return $model->path === 'index';
             },
             'isHidden' => function ($model) {
-                return $model->index === 0;
+                return !preg_match('#/\d+\.(.+)$#', $model->fullPath);
             },
             'isFirst' => function ($model) {
                 return !$model->isHidden && $model->index === 1;

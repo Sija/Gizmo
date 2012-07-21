@@ -103,10 +103,10 @@ class Page extends Model implements \ArrayAccess
         ));
         $this->addDynamicAttributes(array(
             'isCurrent' => function ($page, $gizmo) {
-                return $gizmo['current_model']->isEqual($page);
+                return $gizmo['dispatched_model']->isEqual($page);
             },
             'inPath' => function ($page, $gizmo) {
-                return $page->isCurrent || in_array($page->fullPath, $gizmo['current_model']->parents);
+                return $page->isCurrent || in_array($page->fullPath, $gizmo['dispatched_model']->parents);
             }
         ));
     }
