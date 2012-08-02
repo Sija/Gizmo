@@ -2,21 +2,35 @@
 
 namespace Gizmo;
 
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Yaml\Yaml;
 
 class Page extends Model implements \ArrayAccess
 {
     protected
         $requiredKeys = array('fullPath', 'metaFile');
+
+    public function renderWith(Response $response)
+    {
+        if ($this->template) {
+            $content = $this->gizmo['app']['twig']->render($this->template, array('page' => $this));
+            $response->setContent($content);
+            return $response;
+        }
+        return false;
+    }
     
     public function offsetGet($key)
     {
-        return isset($this[$key]) ? $this->meta[$key] : null;
+        return isset($this->meta[$key]) ? $this->meta[$key] : null;
     }
 
     public function offsetSet($key, $value)
     {
-        $this->meta[$key] = $value;
+        $meta = $this->meta;
+        $meta[$key] = $value;
+        $this->meta = $meta;
+        return $value;
     }
 
     public function offsetExists($key)
@@ -98,7 +112,7 @@ class Page extends Model implements \ArrayAccess
             },
             'thumb' => function ($page, $gizmo) {
                 $thumbnails = $gizmo['cache']->getFiles($page->fullPath, '/^thumb\.(gif|png|jpe?g)$/i');
-                return empty($thumbnails) ? false : $thumbnails[0];
+                return empty($thumbnails) ? null : $thumbnails[0];
             }
         ));
         $this->addDynamicAttributes(array(
@@ -107,6 +121,18 @@ class Page extends Model implements \ArrayAccess
             },
             'inPath' => function ($page, $gizmo) {
                 return $page->isCurrent || in_array($page->fullPath, $gizmo['dispatched_model']->parents);
+            },
+            'inRequestPath' => function ($page, $gizmo) {
+                $requestUri = rtrim($gizmo['request']->getRequestUri(), '/');
+                $baseUrl = $gizmo['request']->getBaseUrl();
+
+                # FIXME: find a better way
+                if ($page->isHomepage) {
+                    return $requestUri == $baseUrl || 0 === strpos($requestUri, rtrim($page->permalink, '/') . '/index');
+                }
+                return 0 === strpos($requestUri, $page->permalink . (
+                    strlen($requestUri) === strlen($page->permalink) ? '' : '/'
+                ));
             }
         ));
     }

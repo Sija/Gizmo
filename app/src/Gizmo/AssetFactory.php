@@ -65,14 +65,14 @@ class AssetFactory extends ModelFactory
     protected function findAssetClass($path)
     {
         $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        if (!$ext) return false;
+        if (!$ext)
+            return false;
 
         $assetClass = 'Gizmo\\Asset';
         if (isset($this->extensionMap[$ext])) {
             $assetClasses = $this->extensionMap[$ext];
             $assetClass = $assetClasses[count($assetClasses) - 1];
-            return $assetClass;
         }
-        return false;
+        return $assetClass;
     }
 }

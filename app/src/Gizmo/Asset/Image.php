@@ -4,6 +4,11 @@ namespace Gizmo;
 
 class Image extends Asset
 {
+    public static function getSupportedExtensions()
+    {
+        return array('jpg', 'jpeg', 'gif', 'png');
+    }
+
     public function setData(array $data)
     {
         parent::setData($data);
@@ -29,10 +34,5 @@ class Image extends Asset
                 $this->keywords = $iptc['2#025'][0];
             }
         }
-    }
-    
-    public static function getSupportedExtensions()
-    {
-        return array('jpg', 'jpeg', 'gif', 'png');
     }
 }

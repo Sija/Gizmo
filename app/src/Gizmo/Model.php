@@ -2,6 +2,8 @@
 
 namespace Gizmo;
 
+use Symfony\Component\HttpFoundation\Response;
+
 abstract class Model
 {
     protected
@@ -94,16 +96,16 @@ abstract class Model
     public function clearData()
     {
         foreach ($this->data as $key => $value) {
-            if (!isset($this->requiredKeys[$key])) {
+            if (!isset($this->requiredKeys[$key]))
                 unset($this->$key);
-            }
         }
     }
     
-    public function toArray()
+    public function toArray(array $keys = null)
     {
-        $data = $this->data;
-        foreach (array_keys($this->attributes) as $key) {
+        $data = empty($keys) ? $this->data : array();
+        $keys = empty($keys) ? array_keys($this->attributes) : $keys;
+        foreach ($keys as $key) {
             if (!isset($data[$key]))
                 $data[$key] = $this->$key;
         }
@@ -113,6 +115,11 @@ abstract class Model
     public function isEqual(Model $other)
     {
         return $this->path === $other->path;
+    }
+    
+    public function renderWith(Response $response)
+    {
+        return false;
     }
     
     protected function setDefaultAttributes()
@@ -274,8 +281,11 @@ abstract class Model
             'isHomepage' => function ($model) {
                 return $model->path === 'index';
             },
+            'isVisible' => function ($model) {
+                return !!preg_match('#/\d+\.(.+)$#', $model->fullPath);
+            },
             'isHidden' => function ($model) {
-                return !preg_match('#/\d+\.(.+)$#', $model->fullPath);
+                return !$model->isVisible;
             },
             'isFirst' => function ($model) {
                 return !$model->isHidden && $model->index === 1;

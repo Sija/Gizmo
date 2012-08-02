@@ -38,7 +38,7 @@ class MarkdownParser extends \MarkdownExtraParser implements MarkdownParserInter
         'html_block' => true,
         'auto_link' => true,
         'auto_mailto' => true,
-        'entities' => false
+        'entities' => true
     );
 
     /**

@@ -102,51 +102,62 @@ class Gizmo extends \Pimple
             return $gizmo['asset_factory']->get($path);
         });
         
-        $this['imagine'] = $this->protect(function () {
+        $this['imagine'] = function () {
             if (class_exists('Imagick', false)) {
                 return new \Imagine\Imagick\Imagine();
             }
             return new \Imagine\Gd\Imagine();
-        });
+        };
         
         $app->register(new \Silex\Provider\TwigServiceProvider(), array(
             'twig.path' => $this['templates_path'],
             'twig.options' => array(
-                'base_template_class' => 'Gizmo\\Twig_Template',
-                'strict_variables' => false,
-                'cache' => $this['cache_path'] . '/templates',
+                'auto_reload'           => true,
+                'strict_variables'      => false,
+                'base_template_class'   => 'Gizmo\\Twig_Template',
+                'cache'                 => $this['cache_path'] . '/templates',
             ),
         ));
         $app['twig'] = $app->share($app->extend('twig', function($twig, $app) use ($gizmo) {
+            if ($app['debug']) {
+                $twig->addExtension(new \Twig_Extensions_Extension_Debug());
+            }
             $twig->addExtension(new \Twig_Extensions_Extension_Text());
-            $twig->addExtension(new \Twig_Extensions_Extension_Debug());
             $twig->addExtension(new Twig_Extension($gizmo));
             return $twig;
         }));
         $app->register(new \Silex\Provider\UrlGeneratorServiceProvider());
-        
-        $app['markdown.features'] = array(
-            'entities' => true
-        );
         $app->register(new \SilexExtension\MarkdownExtension());
+        
+        $app['request_local?'] = $this->share(function ($app) {
+            return in_array($app['request']->server->get('REMOTE_ADDR'), array('127.0.0.1', '::1'))
+                || preg_match('/(\.(local|dev)$|^localhost$)/', $app['request']->getHost());
+        });
+        $app->error(function (\Exception $e) use ($app, $gizmo) {
+            if ($app['request_local?']) {
+                return;
+            }
+            if ($dispatched = $gizmo->dispatch500($e)) {
+                return $dispatched;
+            }
+            return $app['debug'] ? null : false;
+        });
     }
 
     public function renderModel(Model $model, $code = null)
     {
         // print_r($model->toArray()); die;
         
-        $response = new Response(null, $code ?: 200);
-        if ($model instanceof Page && $model->template) {
-            $content = $this['app']['twig']->render($model->template, array('page' => $model));
-            $response->setContent($content);
+        $date = new \DateTime('@' . $model->updated);
+        
+        $response = new Response();
+        $response->setStatusCode($code ?: 200);
+        $response->setLastModified($date);
+        
+        if ($response->isNotModified($this['request'])) {
             return $response;
         }
-        if ($model instanceof Asset) {
-            $response->headers->set('Content-Type', $model->mimeType);
-            $response->setContent($model->getContents());
-            return $response;
-        }
-        return false;
+        return $model->renderWith($response);
     }
     
     public function dispatch($path = null)
@@ -173,5 +184,20 @@ class Gizmo extends \Pimple
             return file_get_contents($file404);
         }
         $this['app']->abort(404, 'Sorry, the requested page could not be found.');
+    }
+    
+    public function dispatch500(\Exception $e = null)
+    {
+        if ($page500 = $this['page']('500')) {
+            $page500['e'] = $e;
+            $this['dispatched_model'] = $page500;
+            if ($rendered = $this->renderModel($page500, 500)) {
+                return $rendered;
+            }
+        }
+        $file500 = $this['public_path'] . '/500.html';
+        if (file_exists($file500)) {
+            return file_get_contents($file500);
+        }
     }
 }

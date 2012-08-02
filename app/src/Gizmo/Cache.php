@@ -26,7 +26,7 @@ class Cache
             }
             $this->store[$dir][$item->getBasename()] = array(
                 'path' => (string) $item,
-                'is_folder' => $item->isDir() ? 1 : 0,
+                'is_folder' => (int) $item->isDir(),
                 'mtime' => $item->getMTime(),
             );
         }
@@ -48,6 +48,7 @@ class Cache
                 }
             }
         }
+        natsort($items);
         return $items;
     }
 

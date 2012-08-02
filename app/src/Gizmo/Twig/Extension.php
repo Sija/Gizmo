@@ -20,13 +20,16 @@ class Twig_Extension extends \Twig_Extension
     {
         return array(
             'get' => new \Twig_Function_Method($this, 'get'),
+            'thumbnail_path' => new \Twig_Function_Method($this, 'thumbnail_path'),
+            'public_path' => new \Twig_Function_Method($this, 'public_path'),
         );
     }
     
     public function getFilters()
     {
         return array(
-            'thumbnail' => new \Twig_Filter_Method($this, 'thumbnail'),
+            'thumbnail_path' => new \Twig_Filter_Method($this, 'thumbnail_path'),
+            'public_path' => new \Twig_Filter_Method($this, 'public_path'),
         );
     }
 
@@ -35,7 +38,7 @@ class Twig_Extension extends \Twig_Extension
         return $this->gizmo['model']($path);
     }
     
-    public function thumbnail($path, $width = null, $height = null, $outbound = null, $quality = null)
+    public function thumbnail_path($path, $width = null, $height = null, $outbound = null, $quality = null)
     {
         $model = $this->gizmo['model']($path);
         if ($model instanceof Page) {
@@ -57,5 +60,12 @@ class Twig_Extension extends \Twig_Extension
             ));
         }
         return null;
+    }
+    
+    public function public_path($path)
+    {
+        return $this->gizmo['app']['url_generator']->generate('public', array(
+            'path' => ltrim($path, '/')
+        ));
     }
 }

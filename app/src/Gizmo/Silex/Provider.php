@@ -30,6 +30,7 @@ class Provider implements ServiceProviderInterface, ControllerProviderInterface
     {
         $controllers = $app['controllers_factory'];
         
+        // Tumbnailer route
         $controllers->match('/thumb/{width}x{height}/{path}', function ($width, $height, $path) use ($app) {
             $gizmo = $app['gizmo'];
             
@@ -51,16 +52,16 @@ class Provider implements ServiceProviderInterface, ControllerProviderInterface
             } else {
                 $image = $gizmo['asset']($path);
 
-                if (!$image || 0 !== strpos($image->mimeType, 'image/'))
+                if (!$image || 0 !== strpos($image->mimeType, 'image/')) {
                     return new Response(null, 404);
-
-                $imagine = $gizmo['imagine']();
+                }
+                $imagine = $gizmo['imagine'];
                 $contents = $imagine->open($image->fullPath)
                     ->thumbnail(new \Imagine\Image\Box($width, $height), $mode)
                     ->save($cachePath, array('quality' => $quality))
                     ->get($format, array('quality' => $quality));
             }
-            return new Response($contents, 201, array(
+            return new Response($contents, 200, array(
                 'Content-Type' => 'image/' . $format,
             ));
         })
@@ -68,7 +69,21 @@ class Provider implements ServiceProviderInterface, ControllerProviderInterface
           ->assert('width', '\d+')
           ->assert('height', '\d+')
           ->assert('path', '.+?');
-
+        
+        // Assets route
+        $controllers->match('/-/{path}', function ($path) use ($app) {
+            $gizmo = $app['gizmo'];
+            
+            $path = $gizmo['public_path'] . '/' . $path;
+            $asset = $gizmo['asset_factory']->modelFromFullPath($path);
+            if ($asset) {
+                return $gizmo->renderModel($asset);
+            }
+            return new Response(null, 404);
+        })
+          ->bind('public')
+          ->assert('path', '.+?');
+        
         // Bind default catch-all route for pages
         $controllers->match('/{path}.{_format}', function ($path) use ($app) {
             return $app['gizmo']->dispatch($path);
@@ -83,7 +98,7 @@ class Provider implements ServiceProviderInterface, ControllerProviderInterface
             return $app['gizmo']->dispatch();
         })
           ->bind('homepage');
-
+        
         return $controllers;
     }
 }

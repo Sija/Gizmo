@@ -2,19 +2,18 @@
 
 namespace Gizmo;
 
+use Symfony\Component\HttpFoundation\Response;
+
 class Asset extends Model
 {
-    public function setData(array $data)
+    /**
+     *
+     */
+    public static function getSupportedExtensions()
     {
-        parent::setData($data);
-        
-        if (class_exists('finfo')) {
-            $finfo = new \finfo(FILEINFO_MIME_TYPE);
-            if ($finfo) {
-                $this->mimeType = $finfo->file($this->fullPath);
-            }
-        }
+        return array();
     }
+    
     /**
      *
      */
@@ -26,9 +25,11 @@ class Asset extends Model
     /**
      *
      */
-    public static function getSupportedExtensions()
+    public function renderWith(Response $response)
     {
-        return array();
+        $response->headers->set('Content-Type', $this->mimeType);
+        $response->setContent($this->getContents());
+        return $response;
     }
     
     /**
@@ -56,6 +57,24 @@ class Asset extends Model
                 $modelName = explode('\\', strtolower(get_class($asset)));
                 return $modelName[count($modelName) - 1];
             },
+            'mimeType' => function ($asset) {
+                $mime = 'application/octet-stream';
+                if (class_exists('finfo')) {
+                    $finfo = new \finfo(FILEINFO_MIME_TYPE);
+                    if ($finfo)
+                        $mime = $finfo->file($asset->fullPath);
+                }
+                if (0 === strpos($mime, 'text/')) {
+                    switch ($asset->ext) {
+                        case 'js':  return 'application/javascript';
+                        case 'css': return 'text/css';
+                    }
+                }
+                return $mime;
+            },
+            'ext' => function ($asset) {
+                return strtolower(pathinfo($asset->fullPath, PATHINFO_EXTENSION));
+            },
             'children' => function ($asset, $gizmo) {
                 return $gizmo['cache']->getFiles(preg_replace('/\.([^.]+)$/', '', $asset->fullPath),
                     '/^\d+?\.(.+?)\.(' . join('|', $asset->getSupportedExtensions()) . ')$/');
@@ -74,8 +93,8 @@ class Asset extends Model
                 return $gizmo['cache']->getFiles($asset->parent,
                     '/^\d+?\.(.+?)\.(' . join('|', $asset->getSupportedExtensions()) . ')$/');
             },
-            'isHidden' => function ($model) {
-                return !preg_match('#/\d+\.([^\/.]+)\.([^\/.]+)$#', $model->fullPath);
+            'isVisible' => function ($model) {
+                return !!preg_match('#/\d+\.([^\/.]+)\.([^\/.]+)$#', $model->fullPath);
             },
         ));
     }
