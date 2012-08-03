@@ -114,7 +114,7 @@ abstract class Model
     
     public function isEqual(Model $other)
     {
-        return $this->path === $other->path;
+        return $this->fullPath === $other->fullPath;
     }
     
     public function renderWith(Response $response)

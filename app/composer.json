@@ -1,40 +1,45 @@
 {
-    "name": "gizmo/gizmo",
-    "description": "Flexible, file based micro-CMS",
-    "keywords": ["microcms", "cms", "yaml"],
-    "homepage": "http://github.com/Sija/Gizmo",
-    "license": "MIT",
-    "source": {
-        "url": "git://github.com/Sija/Gizmo.git",
-        "type": "git",
-        "reference": "master"
-    },
+    "name":         "gizmo/gizmo",
+    "description":  "Flexible, file based micro-CMS",
+    "homepage":     "http://gizmocms.com",
+    "license":      "MIT",
+    "keywords":     ["microcms", "cms", "yaml"],
     "authors": [
         {
-            "name": "Sijawusz Pur Rahnama",
-            "email": "sija@sija.pl",
+            "name":     "Sijawusz Pur Rahnama",
+            "email":    "sija@sija.pl",
             "homepage": "http://sija.pl/"
         }
     ],
     "config": {
         "process-timeout": 600
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git://github.com/Sija/markdown.git"
+        },
+        {
+            "type": "vcs",
+            "url": "git://github.com/Sija/smartypants.git"
+        }
+    ],
     "minimum-stability": "dev",
     "require": {
-        "php": ">=5.3.2",
-        "twig/twig": "1.*",
-        "twig/extensions": "dev-master",
-        "symfony/finder": "2.1.*",
-        "symfony/yaml": "2.1.*",
-        "symfony/twig-bridge": "2.1.*",
-        "silex/silex": "1.0.*",
-        "fate/silex-extensions": "dev-master",
-        "igorw/config-service-provider": "dev-master",
-        "imagine/Imagine": "dev-master"
+        "php":                  ">=5.3.2",
+        "twig/twig":            "1.*",
+        "twig/extensions":      "dev-master",
+        "symfony/twig-bridge":  "2.1.*",
+        "symfony/yaml":         "2.1.*",
+        "symfony/finder":       "2.1.*",
+        "silex/silex":          "1.0.*",
+        "sija/markdown":        "dev-master",
+        "sija/smartypants":     "dev-master",
+        "imagine/imagine":      "dev-master"
     },
     "autoload": {
         "psr-0": {
-            "": "src/"
+            "Gizmo": "src/"
         }
     },
     "extra": {

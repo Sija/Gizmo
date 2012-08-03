@@ -23,7 +23,7 @@ abstract class ModelFactory
     
     public function fromPath($path)
     {
-        $fullPath = $this->gizmo['expand_path']($path);
+        $fullPath = $this->gizmo->expandPath($path);
         if ($fullPath) {
             return $this->fromFullPath($fullPath);
         }

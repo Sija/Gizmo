@@ -72,7 +72,7 @@ class Page extends Model implements \ArrayAccess
                 $modelName = preg_replace('/([^.]+\.)?([^.]+)$/', '\\2', $modelName);
                 return $modelName;
             },
-            'meta' => function ($page, $gizmo) {
+            'sharedMeta' => function ($page, $gizmo) {
                 $sharedFiles = array();
                 # need to take account for 'fake' level 0 reserved for index page
                 for ($i = $page->level ?: 1; $i >= 0; --$i) {
@@ -85,6 +85,10 @@ class Page extends Model implements \ArrayAccess
                     if ($loadedData = Yaml::parse($file))
                         $data = array_merge($data, $loadedData);
                 }
+                return $data;
+            },
+            'meta' => function ($page, $gizmo) {
+                $data = $page->sharedMeta;
                 $modelMeta = Yaml::parse($page->metaFile);
                 if (!empty($modelMeta)) {
                     $data = array_merge($data, $modelMeta);

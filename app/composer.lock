@@ -1,23 +1,11 @@
 {
-    "hash": "a9db5187206f2562eeeaad8aafa7cce7",
+    "hash": "29c155f8af60bc583f01a95473adce69",
     "packages": [
-        {
-            "package": "fate/silex-extensions",
-            "version": "dev-master",
-            "source-reference": "4946385ab84fbbe0d25f877c687e322f72838737",
-            "commit-date": "1341410252"
-        },
-        {
-            "package": "igorw/config-service-provider",
-            "version": "dev-master",
-            "source-reference": "v1.0.0",
-            "commit-date": "1342224754"
-        },
         {
             "package": "imagine/Imagine",
             "version": "dev-master",
-            "source-reference": "v0.2.8",
-            "commit-date": "1322638721"
+            "source-reference": "v0.3.0",
+            "commit-date": "1343522118"
         },
         {
             "package": "pimple/pimple",
@@ -28,8 +16,26 @@
         {
             "package": "pimple/pimple",
             "version": "dev-master",
-            "source-reference": "d2cfa2f02f50abef65c238747c753a5f6786f6be",
-            "commit-date": "1341139100"
+            "source-reference": "db836b8cfadc0f39dacafa2bf311a1ab603600bb",
+            "commit-date": "1343051648"
+        },
+        {
+            "package": "sija/markdown",
+            "version": "dev-master",
+            "source-reference": "529ef183bd0050c09c5b291ca8da01e52fe45828",
+            "commit-date": "1343955051"
+        },
+        {
+            "package": "sija/smartypants",
+            "version": "dev-master",
+            "alias-pretty-version": "1.0.x-dev",
+            "alias-version": "1.0.9999999.9999999-dev"
+        },
+        {
+            "package": "sija/smartypants",
+            "version": "dev-master",
+            "source-reference": "c021d6032f33167ce3324832c71fbeb513edada9",
+            "commit-date": "1344000259"
         },
         {
             "package": "silex/silex",
@@ -40,8 +46,8 @@
         {
             "package": "silex/silex",
             "version": "dev-master",
-            "source-reference": "81bafcc6ae67db7aa3be49db382287efe02dfbd4",
-            "commit-date": "1342601028"
+            "source-reference": "a6af6f1edbcdbb1f5924d825c5ed7575cfdcf43e",
+            "commit-date": "1343978225"
         },
         {
             "package": "symfony/event-dispatcher",
@@ -52,8 +58,8 @@
         {
             "package": "symfony/event-dispatcher",
             "version": "dev-master",
-            "source-reference": "v2.1.0-BETA3",
-            "commit-date": "1342347231"
+            "source-reference": "v2.1.0-BETA4",
+            "commit-date": "1342739894"
         },
         {
             "package": "symfony/finder",
@@ -64,8 +70,8 @@
         {
             "package": "symfony/finder",
             "version": "dev-master",
-            "source-reference": "v2.1.0-BETA3",
-            "commit-date": "1342347231"
+            "source-reference": "7fe9695cb1dae09df7f545aabed8fa4b0026108b",
+            "commit-date": "1343512949"
         },
         {
             "package": "symfony/http-foundation",
@@ -76,8 +82,8 @@
         {
             "package": "symfony/http-foundation",
             "version": "dev-master",
-            "source-reference": "65997af41789282d2048cf580c40a659648e555b",
-            "commit-date": "1342625313"
+            "source-reference": "2e28043ea4cd2aa173f5ec9f4f38231fd99305b1",
+            "commit-date": "1343512949"
         },
         {
             "package": "symfony/http-kernel",
@@ -88,8 +94,8 @@
         {
             "package": "symfony/http-kernel",
             "version": "dev-master",
-            "source-reference": "507618b0f3ffb626c81ffc7eda73e4d4f1b7b51a",
-            "commit-date": "1342600793"
+            "source-reference": "91f3e0892bd0c7f2a5ade8a82024ec4925e26c64",
+            "commit-date": "1343064472"
         },
         {
             "package": "symfony/routing",
@@ -100,8 +106,8 @@
         {
             "package": "symfony/routing",
             "version": "dev-master",
-            "source-reference": "3630f2d08515bbad980c0d654433b6689cf460a2",
-            "commit-date": "1342708743"
+            "source-reference": "30f54eb917f64d7735ba0b6a230e9620da95be9b",
+            "commit-date": "1343744077"
         },
         {
             "package": "symfony/twig-bridge",
@@ -112,8 +118,8 @@
         {
             "package": "symfony/twig-bridge",
             "version": "dev-master",
-            "source-reference": "da5cc8681e50087b5d4495e3b5f16bc87ac0a72b",
-            "commit-date": "1342598932"
+            "source-reference": "1e9873087f35a730d8d8d01050efbde724e76815",
+            "commit-date": "1343229695"
         },
         {
             "package": "symfony/yaml",
@@ -124,7 +130,7 @@
         {
             "package": "symfony/yaml",
             "version": "dev-master",
-            "source-reference": "v2.1.0-BETA3",
+            "source-reference": "v2.1.0-BETA4",
             "commit-date": "1342347231"
         },
         {
@@ -142,8 +148,8 @@
         {
             "package": "twig/twig",
             "version": "dev-master",
-            "source-reference": "7c3b987742ed8512ba70712e0ff8862c52eebbc9",
-            "commit-date": "1342675769"
+            "source-reference": "51c866f415bbee670cd9ba13591307bce8dabdca",
+            "commit-date": "1343464333"
         }
     ],
     "packages-dev": null,
@@ -153,8 +159,8 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "twig/extensions": 20,
-        "fate/silex-extensions": 20,
-        "igorw/config-service-provider": 20,
+        "sija/markdown": 20,
+        "sija/smartypants": 20,
         "imagine/imagine": 20
     }
 }

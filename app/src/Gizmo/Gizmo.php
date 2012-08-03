@@ -43,8 +43,44 @@ class Gizmo extends \Pimple
         // }
         
         date_default_timezone_set($this['options']['timezone']);
-
+        
         $gizmo = $this;
+        
+        $app->register(new \Silex\Provider\TwigServiceProvider(), array(
+            'twig.path' => $this['templates_path'],
+            'twig.options' => array(
+                'auto_reload'           => true,
+                'strict_variables'      => false,
+                'base_template_class'   => 'Gizmo\\Twig_Template',
+                'cache'                 => $this['cache_path'] . '/templates',
+            ),
+        ));
+        $app['twig'] = $app->share($app->extend('twig', function($twig, $app) use ($gizmo) {
+            if ($app['debug']) {
+                $twig->addExtension(new \Twig_Extensions_Extension_Debug());
+            }
+            $twig->addExtension(new \Twig_Extensions_Extension_Text());
+            $twig->addExtension(new Twig_Extension($gizmo));
+            return $twig;
+        }));
+        $app->register(new \Silex\Provider\UrlGeneratorServiceProvider());
+        $app->register(new \Markdown\Silex\Service\MarkdownSilexService());
+        $app->register(new \Smartypants\Silex\Service\SmartypantsSilexService());
+        
+        $app['request_local?'] = $this->share(function ($app) {
+            return in_array($app['request']->server->get('REMOTE_ADDR'), array('127.0.0.1', '::1'))
+                || preg_match('/(^localhost$|\.(local|dev)$)/', $app['request']->getHost());
+        });
+        $app->error(function (\Exception $e) use ($app, $gizmo) {
+            if ($app['request_local?']) {
+                return;
+            }
+            if ($dispatched = $gizmo->dispatch500($e)) {
+                return $dispatched;
+            }
+            if (!$app['debug']) return false;
+        });
+        
         $this['cache'] = $this->share(function ($gizmo) {
             $cache = new Cache();
             $cache->addFolder($gizmo['content_path']);
@@ -52,39 +88,17 @@ class Gizmo extends \Pimple
             $cache->addFolder($gizmo['public_path']);
             return $cache;
         });
+        
         $this['page_factory'] = $this->share(function ($gizmo) {
             return new PageFactory($gizmo);
         });
         $this['asset_factory'] = $this->share(function ($gizmo) {
             return new AssetFactory($gizmo);
         });
-        $this['expand_path'] = $this->protect(function ($path) use ($gizmo) {
-            $contentPath = $gizmo['content_path'];
-            $path = trim($path, '/') ?: 'index';
-
-            # Split the url and recursively unclean the parts into folder names
-            $pathSegments = explode('/', $path);
-            foreach ($pathSegments as $segment) {
-                if ('_' === $segment{0}) return false;
-                
-                $items = $gizmo['cache']->getFilesOrFolders($contentPath,
-                    '/^'. (!strpos($segment, '.') ? '(\d+?\.)?' : '') .'('. preg_quote($segment) .')$/');
-                
-                switch (count($items)) {
-                    case 0: return false;
-                    case 1:
-                        $relativePath = substr($items[0], strlen($contentPath));
-                        $contentPath .= $relativePath;
-                        break;
-                    default:
-                        throw new \Exception(sprintf('There are %d items with name "%s"', count($items), $segment));
-                }
-            }
-            return $contentPath;
-        });
+        
         $this['model'] = $this->protect(function ($path) use ($gizmo) {
             if (0 !== strpos($path, $gizmo['content_path'])) {
-                if (!$path = $gizmo['expand_path']($path))
+                if (!$path = $gizmo->expandPath($path))
                     return false;
             }
             if (is_dir($path)) {
@@ -108,42 +122,34 @@ class Gizmo extends \Pimple
             }
             return new \Imagine\Gd\Imagine();
         };
-        
-        $app->register(new \Silex\Provider\TwigServiceProvider(), array(
-            'twig.path' => $this['templates_path'],
-            'twig.options' => array(
-                'auto_reload'           => true,
-                'strict_variables'      => false,
-                'base_template_class'   => 'Gizmo\\Twig_Template',
-                'cache'                 => $this['cache_path'] . '/templates',
-            ),
-        ));
-        $app['twig'] = $app->share($app->extend('twig', function($twig, $app) use ($gizmo) {
-            if ($app['debug']) {
-                $twig->addExtension(new \Twig_Extensions_Extension_Debug());
-            }
-            $twig->addExtension(new \Twig_Extensions_Extension_Text());
-            $twig->addExtension(new Twig_Extension($gizmo));
-            return $twig;
-        }));
-        $app->register(new \Silex\Provider\UrlGeneratorServiceProvider());
-        $app->register(new \SilexExtension\MarkdownExtension());
-        
-        $app['request_local?'] = $this->share(function ($app) {
-            return in_array($app['request']->server->get('REMOTE_ADDR'), array('127.0.0.1', '::1'))
-                || preg_match('/(\.(local|dev)$|^localhost$)/', $app['request']->getHost());
-        });
-        $app->error(function (\Exception $e) use ($app, $gizmo) {
-            if ($app['request_local?']) {
-                return;
-            }
-            if ($dispatched = $gizmo->dispatch500($e)) {
-                return $dispatched;
-            }
-            return $app['debug'] ? null : false;
-        });
     }
 
+    public function expandPath($path)
+    {
+        $contentPath = $this['content_path'];
+        $path = trim($path, '/') ?: 'index';
+
+        # Split the url and recursively unclean the parts into folder names
+        $pathSegments = explode('/', $path);
+        foreach ($pathSegments as $segment) {
+            if ('_' === $segment{0}) return false;
+            
+            $items = $this['cache']->getFilesOrFolders($contentPath,
+                '/^'. (!strpos($segment, '.') ? '(\d+?\.)?' : '') .'('. preg_quote($segment) .')$/');
+            
+            switch (count($items)) {
+                case 0: return false;
+                case 1:
+                    $relativePath = substr($items[0], strlen($contentPath));
+                    $contentPath .= $relativePath;
+                    break;
+                default:
+                    throw new \Exception(sprintf('There are %d items with name "%s"', count($items), $segment));
+            }
+        }
+        return $contentPath;
+    }
+    
     public function renderModel(Model $model, $code = null)
     {
         // print_r($model->toArray()); die;
