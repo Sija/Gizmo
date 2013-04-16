@@ -48,7 +48,8 @@ class Cache
                 }
             }
         }
-        natsort($items);
+        natcasesort($items);
+        $items = array_values($items);
         return $items;
     }
 
