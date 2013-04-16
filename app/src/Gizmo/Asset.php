@@ -86,7 +86,7 @@ class Asset extends Model
                 return $gizmo['cache']->getFiles($asset->parent,
                     '/^(?!' . preg_quote($asset->slug) . ')\d+?\.(.+?)\.(' . join('|', $asset->getSupportedExtensions()) . ')$/');
             },
-            'siblingsWitSelf' => function ($asset, $gizmo) {
+            'siblingsWithSelf' => function ($asset, $gizmo) {
                 if ($asset->isHidden)
                     return array();
                 

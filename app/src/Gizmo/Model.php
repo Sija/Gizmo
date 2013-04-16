@@ -205,7 +205,7 @@ abstract class Model
                 return $gizmo['cache']->getFolders($dir,
                     '/^\d+?\.(?!' . preg_quote($model->slug) . ')/');
             },
-            'siblingsWitSelf' => function ($model, $gizmo) {
+            'siblingsWithSelf' => function ($model, $gizmo) {
                 if ($model->isHidden)
                     return array();
 
@@ -220,7 +220,7 @@ abstract class Model
                 if ($model->isHidden)
                     return array(null, null);
                 
-                $siblings = $model->siblingsWitSelf;
+                $siblings = $model->siblingsWithSelf;
                 $neighbors = array();
                 # flip keys/values
                 $siblings = array_flip($siblings);
@@ -251,7 +251,7 @@ abstract class Model
                 if ($model->isHidden)
                     return array();
 
-                return array_slice($model->siblingsWitSelf, 0, $model->index - 1);
+                return array_slice($model->siblingsWithSelf, 0, $model->index - 1);
             },
             'nextSibling' => function ($model) {
                 return $model->closestSiblings[1];
@@ -260,12 +260,12 @@ abstract class Model
                 if ($model->isHidden)
                     return array();
 
-                $siblingsWitSelf = $model->siblingsWitSelf;
-                return array_slice($siblingsWitSelf, $model->index, count($siblingsWitSelf));
+                $siblingsWithSelf = $model->siblingsWithSelf;
+                return array_slice($siblingsWithSelf, $model->index, count($siblingsWithSelf));
             },
             'index' => function ($model) {
                 $i = 0;
-                $siblings = $model->siblingsWitSelf;
+                $siblings = $model->siblingsWithSelf;
                 foreach ($siblings as $sibling) {
                   ++$i;
                   if ($sibling === $model->fullPath)
@@ -291,7 +291,7 @@ abstract class Model
                 return !$model->isHidden && $model->index === 1;
             },
             'isLast' => function ($model) {
-                return !$model->isHidden && $model->index === count($model->siblingsWitSelf);
+                return !$model->isHidden && $model->index === count($model->siblingsWithSelf);
             }
         ));
     }
