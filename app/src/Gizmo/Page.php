@@ -53,14 +53,14 @@ class Page extends Model implements \ArrayAccess
             $this->addAttributes(array(
                 $key => function ($page, $gizmo) use ($extensions) {
                     return $gizmo['cache']->getFiles($page->fullPath,
-                        '/^(?!thumb).(?<!_)(.+?)\.(' . join('|', $extensions) . ')$/i');
+                        '/^(?!thumb)\.?(?<!_)(.+?)\.(' . join('|', $extensions) . ')$/i');
                 }
             ));
         }
         $this->addAttributes(array(
             'files' => function ($page, $gizmo) {
                 return $gizmo['cache']->getFiles($page->fullPath,
-                    '/^(?!thumb).(?<!_)(.+?)\.(?!yml)([\w\d]+?)$/i');
+                    '/^(?!thumb)\.?(?<!_)(.+?)\.(?!yml)([\w\d]+?)$/i');
             }
         ));
         $this->addAttributes(array(
