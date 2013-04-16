@@ -31,7 +31,7 @@ class Provider implements ServiceProviderInterface, ControllerProviderInterface
         $controllers = $app['controllers_factory'];
         
         // Tumbnailer route
-        $controllers->match('/thumb/{width}x{height}/{path}', function ($width, $height, $path) use ($app) {
+        $controllers->get('/thumb/{width}x{height}/{path}', function ($width, $height, $path) use ($app) {
             $gizmo = $app['gizmo'];
             
             $outbound = $app['request']->query->get('outbound') ?: false;
@@ -71,7 +71,7 @@ class Provider implements ServiceProviderInterface, ControllerProviderInterface
           ->assert('path', '.+?');
         
         // Assets route
-        $controllers->match('/-/{path}', function ($path) use ($app) {
+        $controllers->get('/-/{path}', function ($path) use ($app) {
             $gizmo = $app['gizmo'];
             
             $path = $gizmo['public_path'] . '/' . $path;
