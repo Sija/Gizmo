@@ -93,8 +93,11 @@ class Asset extends Model
                 return $gizmo['cache']->getFiles($asset->parent,
                     '/^\d+?\.(.+?)\.(' . join('|', $asset->getSupportedExtensions()) . ')$/');
             },
-            'isVisible' => function ($model) {
-                return !!preg_match('#/\d+\.([^\/.]+)\.([^\/.]+)$#', $model->fullPath);
+            'isVisible' => function ($asset) {
+                return !!preg_match('#/\d+\.([^\/.]+)\.([^\/.]+)$#', $asset->fullPath);
+            },
+            'updated' => function ($asset) {
+                return filemtime($asset->fullPath);
             },
         ));
     }

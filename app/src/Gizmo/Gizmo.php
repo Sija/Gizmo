@@ -154,14 +154,18 @@ class Gizmo extends \Pimple
     {
         // print_r($model->toArray()); die;
         
-        $date = new \DateTime('@' . $model->updated);
-        
         $response = new Response();
         $response->setStatusCode($code ?: 200);
-        $response->setLastModified($date);
         
-        if ($response->isNotModified($this['request'])) {
-            return $response;
+        // FIXME: use for pages as well
+        if ($model instanceof Asset) {
+            // FIXME: use either $model->updated or higher timestamp from file_cache if such exists
+            $date = new \DateTime('@' . $model->updated);
+            $response->setLastModified($date);
+        
+            if ($response->isNotModified($this['request'])) {
+                return $response;
+            }
         }
         return $model->renderWith($response);
     }
