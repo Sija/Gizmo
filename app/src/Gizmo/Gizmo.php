@@ -170,6 +170,18 @@ class Gizmo extends \Pimple
     {
         if ($model = $this['model']($path)) {
             $this['dispatched_model'] = $model;
+            if ($model instanceof Page) {
+                if (isset($model['_redirect_to'])) {
+                    return $this['app']->redirect($model['_redirect_to']);
+                }
+                if (isset($model['_render_with'])) {
+                    $forwarded_model_path = $model['_render_with'];
+                    if ('/' !== $forwarded_model_path{0}) {
+                        $forwarded_model_path = $model->path . '/' . $forwarded_model_path;
+                    }
+                    return $this->dispatch($forwarded_model_path);
+                }
+            }
             if ($rendered = $this->renderModel($model)) {
                 return $rendered;
             }
