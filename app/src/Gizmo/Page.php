@@ -97,14 +97,14 @@ class Page extends Model implements \ArrayAccess
             },
             'template' => function ($page, $gizmo) {
                 $files = $gizmo['cache']->getFiles($gizmo['templates_path'], 
-                    sprintf('/%s(.*?)\.%s\.twig/i', $page->modelName, $page->format));
+                    sprintf('/^%s\.%s\.twig/i', $page->modelName, $page->format));
 
                 if (!empty($files)) {
                     return basename($files[0]);
                 }
-                if ($page->path != '404') {
+                if ($page->path !== '404') {
                     $files = $gizmo['cache']->getFiles($gizmo['templates_path'], 
-                        sprintf('/%s(.*?)\.(.+?)\.twig/i', $page->modelName));
+                        sprintf('/^%s\.(.+?)\.twig/i', $page->modelName));
                     
                     if (!empty($files))
                         return null;
