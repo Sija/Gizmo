@@ -62,10 +62,11 @@ class Provider implements ServiceProviderInterface, ControllerProviderInterface
                     ->thumbnail(new \Imagine\Image\Box($width, $height), $mode)
                     ->save($cachePath, array('quality' => $quality));
             }
-            $cachedImage = new \Gizmo\Asset\Image($gizmo, array(
-                'fullPath' => $cachePath
-            ));
-            return $gizmo->renderModel($cachedImage);
+            $cachedImage = $gizmo['asset_factory']->modelFromFullPath($cachePath);
+            if ($cachedImage) {
+                return $gizmo->renderModel($cachedImage);
+            }
+            return new Response(null, 404);
         })
           ->bind('thumb')
           ->assert('width', '\d+')
