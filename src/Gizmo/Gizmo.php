@@ -27,7 +27,7 @@ class Gizmo extends \Pimple
             'content'   => null,
             'templates' => null,
             'public'    => null,
-            'cache'     => 'app/cache',
+            'cache'     => null,
         );
         foreach ($defaultPaths as $name => $path) {
             $key = sprintf('%s_path', $name);
