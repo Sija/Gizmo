@@ -28,15 +28,14 @@
     "require": {
         "php":                      ">=5.3.2",
         "twig/twig":                "1.*",
-        "twig/extensions":          "dev-master",
+        "twig/extensions":          "1.*",
         "symfony/twig-bridge":      "2.2.*",
         "symfony/yaml":             "2.2.*",
         "symfony/finder":           "2.2.*",
         "silex/silex":              "1.0.*",
         "sija/markdown":            "dev-master",
         "sija/smartypants":         "dev-master",
-        "imagine/imagine":          "dev-master",
-        "swiftmailer/swiftmailer":  "dev-master"
+        "imagine/imagine":          "0.4.*"
     },
     "autoload": {
         "psr-0": {
