@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "878da2887bea772220c06aea4146dc23",
+    "hash": "4c27b852b065d96b15901c569d8eef8b",
     "packages": [
         {
             "name": "imagine/Imagine",
@@ -313,6 +313,55 @@
                 "microframework"
             ],
             "time": "2013-04-11 12:23:56"
+        },
+        {
+            "name": "swiftmailer/swiftmailer",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/swiftmailer/swiftmailer.git",
+                "reference": "e77eb358a1aa7157afb922f33e2afc22f6a7bef2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/swiftmailer/swiftmailer/zipball/e77eb358a1aa7157afb922f33e2afc22f6a7bef2",
+                "reference": "e77eb358a1aa7157afb922f33e2afc22f6a7bef2",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.2.4"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.3-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "lib/swift_required.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Chris Corbyn"
+                }
+            ],
+            "description": "Swiftmailer, free feature-rich PHP mailer",
+            "homepage": "http://swiftmailer.org",
+            "keywords": [
+                "mail",
+                "mailer"
+            ],
+            "time": "2013-04-11 10:22:54"
         },
         {
             "name": "symfony/event-dispatcher",
@@ -813,7 +862,8 @@
         "twig/extensions": 20,
         "sija/markdown": 20,
         "sija/smartypants": 20,
-        "imagine/imagine": 20
+        "imagine/imagine": 20,
+        "swiftmailer/swiftmailer": 20
     },
     "platform": {
         "php": ">=5.3.2"

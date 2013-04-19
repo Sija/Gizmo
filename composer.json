@@ -35,7 +35,8 @@
         "silex/silex":              "1.0.*",
         "sija/markdown":            "dev-master",
         "sija/smartypants":         "dev-master",
-        "imagine/imagine":          "dev-master"
+        "imagine/imagine":          "dev-master",
+        "swiftmailer/swiftmailer":  "dev-master"
     },
     "autoload": {
         "psr-0": {
