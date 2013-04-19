@@ -23,7 +23,6 @@ class Gizmo extends \Pimple
         $app['gizmo.options']);
         
         $defaultPaths = array(
-            'app'       => null,
             'content'   => null,
             'templates' => null,
             'public'    => null,
@@ -35,6 +34,11 @@ class Gizmo extends \Pimple
                 $this[$key] = rtrim($app['gizmo.' . $key], '/');
             } else {
                 $this[$key] = $app['gizmo.path'] . '/' . ($path ?: $name);
+            }
+        }
+        if (!is_dir($this['cache_path'])) {
+            if (!@mkdir($this['cache_path'], 0777)) {
+                throw new \RuntimeException('Cannot create cache directory');
             }
         }
         // $configFile = $this['content_path']. '/config.yml';
