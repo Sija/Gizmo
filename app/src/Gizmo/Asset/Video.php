@@ -1,8 +1,8 @@
 <?php
 
-namespace Gizmo;
+namespace Gizmo\Asset;
 
-class Video extends Asset
+class Video extends \Gizmo\Asset
 {
     public static function getSupportedExtensions()
     {

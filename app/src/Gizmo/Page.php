@@ -49,7 +49,7 @@ class Page extends Model implements \ArrayAccess
         
         $assetTypes = $this->gizmo['asset_factory']->getAssetMap();
         foreach ($assetTypes as $class => $extensions) {
-            $key = sprintf('%ss', strtolower(preg_replace('/^((.+?)\\\)?(.+?)$/', '\\3', $class)));
+            $key = sprintf('%ss', strtolower(preg_replace('/^(?:(?:.+?)\\\)?(?:(?:.+?)\\\)?(.+?)$/', '\\1', $class)));
             $this->addAttributes(array(
                 $key => function ($page, $gizmo) use ($extensions) {
                     return $gizmo['cache']->getFiles($page->fullPath,

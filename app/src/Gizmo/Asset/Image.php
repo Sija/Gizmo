@@ -1,8 +1,8 @@
 <?php
 
-namespace Gizmo;
+namespace Gizmo\Asset;
 
-class Image extends Asset
+class Image extends \Gizmo\Asset
 {
     public static function getSupportedExtensions()
     {
