@@ -44,26 +44,28 @@ class Provider implements ServiceProviderInterface, ControllerProviderInterface
             
             $format = strtolower(pathinfo($path, PATHINFO_EXTENSION));
             
+            $cacheDir = $gizmo['cache_path'] . '/thumbs/';
+            if (!is_dir($cacheDir)) {
+                mkdir($cacheDir, 0777, true);
+            }
             $key = md5("{$width}x{$height}|q{$quality}|m{$mode}|{$path}") . ".{$format}";
-            $cachePath = $gizmo['cache_path'] . '/thumbs/' . $key;
+            $cachePath = $cacheDir . $key;
             
-            if (file_exists($cachePath)) {
-                $contents = file_get_contents($cachePath);
-            } else {
+            if (!file_exists($cachePath)) {
                 $image = $gizmo['asset']($path);
 
                 if (!$image || 0 !== strpos($image->mimeType, 'image/')) {
                     return new Response(null, 404);
                 }
                 $imagine = $gizmo['imagine'];
-                $contents = $imagine->open($image->fullPath)
+                $imagine->open($image->fullPath)
                     ->thumbnail(new \Imagine\Image\Box($width, $height), $mode)
-                    ->save($cachePath, array('quality' => $quality))
-                    ->get($format, array('quality' => $quality));
+                    ->save($cachePath, array('quality' => $quality));
             }
-            return new Response($contents, 200, array(
-                'Content-Type' => 'image/' . $format,
+            $cachedImage = new \Gizmo\Asset\Image($gizmo, array(
+                'fullPath' => $cachePath
             ));
+            return $gizmo->renderModel($cachedImage);
         })
           ->bind('thumb')
           ->assert('width', '\d+')
