@@ -9,12 +9,43 @@ class Cache
     protected
         $store = array();
     
+    protected
+        $lastMTime = null,
+        $hash = null;
+
+    public function getLastModifiedTime()
+    {
+        if (!$this->lastMTime) {
+            foreach ($this->store as $dir => $items) {
+                foreach ($items as $item) {
+                    if ($this->lastMTime < $item['mtime']) {
+                        $this->lastMTime = $item['mtime'];
+                    }
+                }
+            }
+        }
+        return $this->lastMTime;
+    }
+
+    public function getHash()
+    {
+        if (!$this->hash) {
+            $this->hash = md5(serialize($this->store));
+        }
+        return $this->hash;
+    }
+
+    public function touch()
+    {
+        $this->lastMTime = $this->hash = null;
+    }
+
     public function addFolder($dir)
     {
         $dir = rtrim($dir, '/');
         $it = Finder::create()
-          ->depth(0)
-          ->in($dir);
+            ->depth(0)
+            ->in($dir);
         
         foreach ($it as $item) {
             $filename = $item->getBasename();
@@ -25,11 +56,12 @@ class Cache
                 $this->addFolder((string) $item);
             }
             $this->store[$dir][$item->getBasename()] = array(
-                'path' => (string) $item,
+                'path'      => (string) $item,
                 'is_folder' => (int) $item->isDir(),
-                'mtime' => $item->getMTime(),
+                'mtime'     => $item->getMTime(),
             );
         }
+        $this->touch();
     }
 
     public function getFilesOrFolders($dir, $regex = null, $with_files = true, $with_folders = true)

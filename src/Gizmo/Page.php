@@ -111,8 +111,8 @@ class Page extends Model implements \ArrayAccess
                 }
                 return $gizmo['options']['default_layout'];
             },
-            'updated' => function ($page) {
-                return filemtime($page->metaFile);
+            'updated' => function ($page, $gizmo) {
+                return $gizmo['cache']->getLastModifiedTime();
             },
             'thumb' => function ($page, $gizmo) {
                 $thumbnails = $gizmo['cache']->getFiles($page->fullPath, '/^thumb\.(gif|png|jpe?g)$/i');

@@ -160,6 +160,9 @@ abstract class Model
             'updated' => function ($model) {
                 return filemtime($model->fullPath);
             },
+            'etag' => function ($model, $gizmo) {
+                return md5($gizmo['cache']->getHash() + $model->fullPath);
+            },
             'root' => function ($model, $gizmo) {
                 return $gizmo['cache']->getFolders($gizmo['content_path'], '/^\d+?\./');
             },

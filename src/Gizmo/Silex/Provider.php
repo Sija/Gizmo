@@ -47,7 +47,7 @@ class Provider implements ServiceProviderInterface, ControllerProviderInterface
             $cacheDir = $gizmo['cache_path'] . '/thumbs/';
             if (!is_dir($cacheDir)) {
                 if (!@mkdir($cacheDir, 0777, true)) {
-                    throw new \RuntimeException('Cannot create thumbnails cache directory');
+                    throw new \RuntimeException(sprintf('Cannot create thumbnails cache directory (%s).', $cacheDir));
                 }
             }
             $key = md5("{$width}x{$height}|q{$quality}|m{$mode}|{$path}") . ".{$format}";

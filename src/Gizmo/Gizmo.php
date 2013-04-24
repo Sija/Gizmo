@@ -38,7 +38,7 @@ class Gizmo extends \Pimple
         }
         if (!is_dir($this['cache_path'])) {
             if (!@mkdir($this['cache_path'], 0777)) {
-                throw new \RuntimeException('Cannot create cache directory');
+                throw new \RuntimeException(sprintf('Cannot create cache directory (%s).', $this['cache_path']));
             }
         }
         // $configFile = $this['content_path']. '/config.yml';
@@ -160,16 +160,16 @@ class Gizmo extends \Pimple
         
         $response = new Response();
         $response->setStatusCode($code ?: 200);
+        $response->setPublic();
         
-        // FIXME: use for pages as well
+        $date = new \DateTime('@' . $model->updated);
         if ($model instanceof Asset) {
-            // FIXME: use either $model->updated or higher timestamp from file_cache if such exists
-            $date = new \DateTime('@' . $model->updated);
-            $response->setLastModified($date);
-        
-            if ($response->isNotModified($this['request'])) {
-                return $response;
-            }
+            // $response->setMaxAge(3600);
+        }
+        $response->setETag($model->etag);
+        $response->setLastModified($date);
+        if ($response->isNotModified($this['request'])) {
+            return $response;
         }
         return $model->renderWith($response);
     }

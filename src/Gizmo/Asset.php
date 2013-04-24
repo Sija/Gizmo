@@ -96,9 +96,6 @@ class Asset extends Model
             'isVisible' => function ($asset) {
                 return !!preg_match('#/\d+\.([^\/.]+)\.([^\/.]+)$#', $asset->fullPath);
             },
-            'updated' => function ($asset) {
-                return filemtime($asset->fullPath);
-            },
         ));
     }
 }
