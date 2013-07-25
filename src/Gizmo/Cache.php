@@ -4,6 +4,21 @@ namespace Gizmo;
 
 use Symfony\Component\Finder\Finder;
 
+// server side caching
+$cache_file = 'cachedpage.html';
+$cache_time = 30;
+if (file_exists($cache_file) && time() - $cache_time < filemtime($cache_file)) 
+{
+ 	include($cache_file);
+	exit;
+}
+ob_start();
+$fp = fopen($cache_file, 'w');
+fwrite($fp, ob_get_contents());
+fclose($fp);
+ob_end_flush();	
+
+
 class Cache
 {
     protected
@@ -93,5 +108,5 @@ class Cache
     public function getFolders($dir, $regex = null)
     {
         return $this->getFilesOrFolders($dir, $regex, false, true);
-    }
+    }	
 }
